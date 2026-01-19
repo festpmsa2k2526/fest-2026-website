@@ -1,12 +1,22 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring, useInView, AnimatePresence } from 'framer-motion';
+import { 
+  motion, 
+  useScroll, 
+  useTransform, 
+  useSpring, 
+  useInView, 
+  AnimatePresence,
+  useMotionValueEvent
+} from 'framer-motion';
 import {
   Download, Calendar, MapPin, Users, BookOpen,
   Megaphone, ShieldCheck, Instagram, Globe, Mail,
-  ArrowRight, Sparkles, Zap, Asterisk, ArrowDown
-} from 'lucide-react';
+  ArrowRight, Sparkles, Zap, Asterisk, ArrowDown,
+  BarChart3, ChevronDown, ChevronUp, ExternalLink,
+  Menu, X
+} from 'lucide-react';;
 
 // --- CONFIGURATION ---
 const LIVE_UPDATES = [
@@ -36,6 +46,46 @@ const COMMITTEE = [
   { role: "Financial Convenor", name: "Muhammed Raees", image: "" },
   { role: "Event Manager", name: "Muhammed Ajmal", image: "" },
   { role: "Event Manager", name: "Muhammed Sinan TP", image: "" },
+];
+
+const TEAMS = [
+  { 
+    id: 1, 
+    name: "Aden", 
+    points: 1240, 
+    color: "from-blue-500 to-blue-600",
+    catScores: { sub: 300, jun: 400, sen: 540 } 
+  },
+  { 
+    id: 2, 
+    name: "Hormuz", 
+    points: 980, 
+    color: "from-emerald-500 to-emerald-600",
+    catScores: { sub: 200, jun: 350, sen: 430 } 
+  },
+  { 
+    id: 3, 
+    name: "Zanzibar", 
+    points: 1150, 
+    color: "from-purple-500 to-purple-600",
+    catScores: { sub: 400, jun: 300, sen: 450 } 
+  },
+  { 
+    id: 4, 
+    name: "Malacca", 
+    points: 890, 
+    color: "from-rose-500 to-rose-600",
+    catScores: { sub: 250, jun: 290, sen: 350 } 
+  },
+];
+
+const HIGHLIGHTS = [
+    "https://dlfvtzdtikkjtegkwbmi.supabase.co/storage/v1/object/public/fest-highlights/10.jpg",
+    "https://dlfvtzdtikkjtegkwbmi.supabase.co/storage/v1/object/public/fest-highlights/9.jpg",
+    "https://dlfvtzdtikkjtegkwbmi.supabase.co/storage/v1/object/public/fest-highlights/8.jpg",
+    "https://dlfvtzdtikkjtegkwbmi.supabase.co/storage/v1/object/public/fest-highlights/7.jpg",
+    "https://dlfvtzdtikkjtegkwbmi.supabase.co/storage/v1/object/public/fest-highlights/6.jpg",
+    "https://dlfvtzdtikkjtegkwbmi.supabase.co/storage/v1/object/public/fest-highlights/5.jpg",
 ];
 
 const CATEGORIES = [
@@ -95,6 +145,83 @@ const InfiniteMarquee = () => {
     </div>
   );
 };
+
+// --- NEW COMPONENTS ---
+
+// const StickyNavbar = () => {
+//     const { scrollY } = useScroll();
+//     const [isVisible, setIsVisible] = useState(false);
+
+//     useMotionValueEvent(scrollY, "change", (latest) => {
+//         // Show after 1000px (roughly after ThemeManifesto)
+//         if (latest > 1000) {
+//             setIsVisible(true);
+//         } else {
+//             setIsVisible(false);
+//         }
+//     });
+
+//     return (
+//         <AnimatePresence>
+//             {isVisible && (
+//                 <motion.div
+//                     initial={{ y: -100, opacity: 0 }}
+//                     animate={{ y: 0, opacity: 1 }}
+//                     exit={{ y: -100, opacity: 0 }}
+//                     transition={{ duration: 0.3 }}
+//                     className="fixed top-0 left-0 w-full z-[60] px-4 py-4 pointer-events-none flex justify-center"
+//                 >
+//                     <nav className="pointer-events-auto bg-white/10 backdrop-blur-xl border border-white/20 rounded-full px-6 py-3 flex items-center gap-6 shadow-2xl text-white">
+//                         <span className="font-bold text-lg tracking-widest mr-2">QUL.</span>
+//                         <div className="hidden md:flex gap-6 text-sm font-medium">
+//                             <a href="#" className="hover:text-blue-300 transition-colors">Schedule</a>
+//                             <a href="#" className="hover:text-blue-300 transition-colors">Results</a>
+//                             <a href="#" className="hover:text-blue-300 transition-colors">Live</a>
+//                             <a href="#" className="hover:text-blue-300 transition-colors">Team</a>
+//                         </div>
+//                         <div className="h-4 w-px bg-white/20 mx-2 hidden md:block"></div>
+//                         <button className="bg-white text-[#0033A0] hover:bg-blue-50 px-5 py-1.5 rounded-full text-sm font-bold transition-colors">
+//                             Login
+//                         </button>
+//                     </nav>
+//                 </motion.div>
+//             )}
+//         </AnimatePresence>
+//     );
+// };
+
+const HighlightsGallery = () => {
+    return (
+        <section className="py-24 bg-slate-950 overflow-hidden relative">
+            <div className="absolute inset-0 bg-[#0033A0]/5 pointer-events-none"></div>
+            <div className="container mx-auto px-6 mb-12 relative z-10">
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Highlights</h2>
+                <div className="h-1 w-20 bg-blue-500 rounded-full"></div>
+            </div>
+            
+            <div className="flex overflow-hidden relative z-10">
+                 {/* Infinite Scroll Container */}
+                 <motion.div 
+                    className="flex gap-6 px-6"
+                    animate={{ x: ["0%", "-50%"] }}
+                    transition={{ duration: 100, ease: "linear", repeat: Infinity }}
+                 >
+                    {[...HIGHLIGHTS, ...HIGHLIGHTS, ...HIGHLIGHTS].map((src, i) => (
+                        <div key={i} className="relative w-[300px] h-[400px] md:w-[400px] md:h-[500px] shrink-0 rounded-2xl overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 opacity-60 group-hover:opacity-40 transition-opacity"></div>
+                            <img src={src} alt="Highlight" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 scale-100 group-hover:scale-110" />
+                            <div className="absolute bottom-6 left-6 z-20">
+                                <span className="text-xs font-mono text-blue-400 mb-1 block">Day { (i % 3) + 1}</span>
+                            </div>
+                        </div>
+                    ))}
+                 </motion.div>
+            </div>
+        </section>
+    );
+}
+
+
 
 // --- SECTIONS ---
 
@@ -221,7 +348,7 @@ const ThemeManifesto = () => {
               transition={{ duration: 1 }}
               className="relative"
             >
-              <h2 className="text-[10rem] md:text-[15rem] font-bold leading-none text-transparent bg-clip-text bg-gradient-to-b from-white/10 to-transparent select-none">
+              <h2 className="text-[10rem] md:text-[15rem] font-bold leading-none text-transparent bg-clip-text bg-linear-to-b from-white/10 to-transparent select-none">
                 اللّٰهُ
               </h2>
             </motion.div>
@@ -258,14 +385,14 @@ const ThemeManifesto = () => {
 
 
 const LiveDashboard = () => {
+  const maxPoints = Math.max(...TEAMS.map(t => t.points));
+
   return (
     <section className="relative py-24 bg-[#0033A0] text-white overflow-hidden">
-      {/* Marquee at Top of Section */}
       <div className="absolute top-0 w-full z-20">
         <InfiniteMarquee />
       </div>
 
-      {/* Decorative Grid */}
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay"></div>
       <div className="absolute inset-0 opacity-10"
         style={{ backgroundImage: 'linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)', backgroundSize: '50px 50px' }}>
@@ -281,40 +408,77 @@ const LiveDashboard = () => {
             <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
             <span className="text-xs font-medium tracking-widest uppercase">Live Arena</span>
           </motion.div>
-          <h2 className="text-4xl md:text-6xl font-bold mb-4">TEAM STANDINGS</h2>
-          <p className="text-blue-200 max-w-xl mx-auto">The stage is set. Four groups compete for the ultimate championship title.</p>
+          <h2 className="text-4xl md:text-6xl font-bold mb-4">Team Standing</h2>
+          <p className="text-blue-200 max-w-xl mx-auto">The stage is ready. Four groups compete for the championship title.</p>
         </div>
 
         {/* Group Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((item) => (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
+          {TEAMS.map((team) => (
             <motion.div
-              key={item}
+              key={team.id}
               whileHover={{ y: -10 }}
-              className="relative h-80 rounded-2xl overflow-hidden bg-gradient-to-b from-white/10 to-white/5 border border-white/10 group"
+              className="relative h-[450px] rounded-2xl overflow-hidden bg-gradient-to-b from-white/10 to-white/5 border border-white/10 group flex flex-col justify-end"
             >
-              <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="absolute bottom-0 left-0 w-full p-6">
-                <h3 className="text-6xl font-bold opacity-20 group-hover:opacity-100 transition-opacity duration-300">{item < 10 ? `0${item}` : item}</h3>
-                <p className="text-lg font-medium mt-2">Group {String.fromCharCode(64 + item)}</p>
-                <div className="w-full bg-white/10 h-1 mt-4 rounded-full overflow-hidden">
-                  <div className="bg-yellow-400 h-full w-3/4"></div>
+              <div className={`absolute inset-0 bg-gradient-to-b ${team.color} opacity-0 group-hover:opacity-20 transition-opacity duration-500`}></div>
+              
+              <div className="p-6 relative z-10 w-full">
+                <h3 className="text-6xl font-bold opacity-20 group-hover:opacity-100 transition-opacity duration-300">{team.id < 10 ? `0${team.id}` : team.id}</h3>
+                <p className="text-2xl font-bold mt-2 text-white">{team.name}</p>
+                <p className="text-3xl font-black text-yellow-400 mt-2 mb-6">{team.points} Pts</p>
+
+                {/* Category Breakdown Bars */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-xs">
+                        <span className="text-blue-300 w-8">Sub</span>
+                        <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                            <motion.div 
+                                initial={{ width: 0 }}
+                                whileInView={{ width: `${(team.catScores.sub / team.points) * 100}%` }}
+                                transition={{ duration: 1 }}
+                                className="h-full bg-blue-400"
+                            />
+                        </div>
+                        <span className="text-white font-mono">{team.catScores.sub}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                        <span className="text-blue-300 w-8">Jun</span>
+                        <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                            <motion.div 
+                                initial={{ width: 0 }}
+                                whileInView={{ width: `${(team.catScores.jun / team.points) * 100}%` }}
+                                transition={{ duration: 1, delay: 0.1 }}
+                                className="h-full bg-green-400"
+                            />
+                        </div>
+                        <span className="text-white font-mono">{team.catScores.jun}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                        <span className="text-blue-300 w-8">Sen</span>
+                        <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                            <motion.div 
+                                initial={{ width: 0 }}
+                                whileInView={{ width: `${(team.catScores.sen / team.points) * 100}%` }}
+                                transition={{ duration: 1, delay: 0.2 }}
+                                className="h-full bg-yellow-400"
+                            />
+                        </div>
+                        <span className="text-white font-mono">{team.catScores.sen}</span>
+                    </div>
                 </div>
-                <p className="text-xs text-right mt-2 font-mono text-yellow-400">1,240 Pts</p>
               </div>
             </motion.div>
           ))}
         </div>
 
-        {/* Schedule Teaser */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Main Schedule Info - Takes 2 columns */}
+        {/* Schedule & Downloads Area with CTA */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="md:col-span-2 bg-white rounded-2xl p-8 text-[#0033A0] flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl">
             <div>
               <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
                 <Calendar className="w-6 h-6" /> Live Schedule
               </h3>
-              <p className="text-gray-600">Off-stage events concluding. On-stage preparations underway.</p>
+              <p className="text-gray-600">Off-stage events concluding. On-stage events are started.</p>
             </div>
             <div className="flex gap-4">
               <div className="text-center px-6 py-4 bg-blue-50 rounded-xl">
@@ -328,16 +492,15 @@ const LiveDashboard = () => {
             </div>
           </div>
 
-          {/* Download Manual Button - Takes 1 column */}
-          <a href="https://drive.google.com/file/d/187ryFN8itlvL0bY4ULJwGHFh1-4colLZ/view?usp=drive_link" target="_blank" rel="noopener noreferrer" className="bg-yellow-400 hover:bg-yellow-300 transition-colors rounded-2xl p-6 text-[#0033A0] flex flex-col justify-center items-center gap-3 shadow-xl text-center group">
+          <a href="#" className="bg-yellow-400 hover:bg-yellow-300 transition-colors rounded-2xl p-6 text-[#0033A0] flex flex-col justify-center items-center gap-3 shadow-xl text-center group">
             <Download className="w-10 h-10 group-hover:scale-110 transition-transform" />
             <span className="font-bold text-lg leading-tight">Download Manual</span>
           </a>
 
-          {/* New Download Schedule Button - Takes 1 column */}
-          <a href="#" className="bg-white hover:bg-gray-50 transition-colors rounded-2xl p-6 text-[#0033A0] flex flex-col justify-center items-center gap-3 shadow-xl text-center group">
-            <Calendar className="w-10 h-10 group-hover:scale-110 transition-transform" />
-            <span className="font-bold text-lg leading-tight">Download Schedule</span>
+          {/* New Results CTA */}
+          <a href="/results" className="bg-[#0033A0] border border-white/20 hover:bg-white hover:text-[#0033A0] transition-colors rounded-2xl p-6 text-white flex flex-col justify-center items-center gap-3 shadow-xl text-center group">
+            <ExternalLink className="w-10 h-10 group-hover:scale-110 transition-transform" />
+            <span className="font-bold text-lg leading-tight">Explore Detailed Results</span>
           </a>
         </div>
       </div>
@@ -346,37 +509,116 @@ const LiveDashboard = () => {
 };
 
 const CommitteeGrid = () => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
-    <section className="py-24 bg-slate-50 relative">
-      <div className="container mx-auto px-6">
-        <div className="flex items-center justify-between mb-12">
+    <section className="py-24 bg-slate-50 relative overflow-hidden">
+      <div className="container mx-auto px-6 mb-12">
+        <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold text-[#0033A0]">Organizers</h2>
           <div className="h-px bg-gray-200 flex-1 ml-8"></div>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {COMMITTEE.map((member, i) => (
-            <div key={i} className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group">
-              <div className="w-16 h-16 rounded-full bg-blue-50 flex-shrink-0 overflow-hidden border-2 border-transparent group-hover:border-blue-500 transition-colors">
-                {/* Image logic: Displays real image if provided, otherwise generates a nice initial avatar */}
-                {member.image ? (
-                  <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
-                ) : (
-                  <img
-                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=eff6ff&color=0033A0&bold=true`}
-                    alt={member.name}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-              </div>
-              <div>
-                <h4 className="font-bold text-gray-900 leading-tight">{member.name}</h4>
-                <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">{member.role}</p>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
+
+      {/* View Mode 1: Infinite Marquee (Default) */}
+      <AnimatePresence mode="wait">
+        {!isExpanded ? (
+          <motion.div 
+            key="marquee"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative w-full"
+          >
+             <div className="flex overflow-hidden relative">
+                  <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-slate-50 to-transparent z-10"></div>
+                  <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-slate-50 to-transparent z-10"></div>
+                  
+                  <motion.div 
+                    className="flex gap-6 pl-6"
+                    animate={{ x: ["0%", "-50%"] }}
+                    transition={{ duration: 120, ease: "linear", repeat: Infinity }}
+                  >
+                        {[...COMMITTEE, ...COMMITTEE].map((member, i) => (
+                             <div key={i} className="flex-shrink-0 w-72 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+                                <div className="w-14 h-14 rounded-full bg-blue-50 flex-shrink-0 overflow-hidden">
+                                     {member.image ? (
+                                        <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+                                     ) : (
+                                        <img 
+                                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=eff6ff&color=0033A0&bold=true`} 
+                                          alt={member.name} 
+                                          className="w-full h-full object-cover" 
+                                        />
+                                     )}
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900 text-sm leading-tight">{member.name}</h4>
+                                    <p className="text-[10px] text-gray-500 uppercase tracking-wide mt-1">{member.role}</p>
+                                </div>
+                             </div>
+                        ))}
+                  </motion.div>
+             </div>
+             
+             <div className="flex justify-center mt-12">
+                 <button 
+                    onClick={() => setIsExpanded(true)}
+                    className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-[#0033A0] rounded-full text-sm font-bold shadow-sm hover:shadow-md hover:bg-blue-50 transition-all"
+                 >
+                    <Users className="w-4 h-4" />
+                    Meet the Whole Team
+                 </button>
+             </div>
+          </motion.div>
+        ) : (
+          /* View Mode 2: Expanded Grid */
+          <motion.div 
+            key="grid"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="container mx-auto px-6"
+          >
+             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {COMMITTEE.map((member, i) => (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        key={i} 
+                        className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group"
+                    >
+                    <div className="w-16 h-16 rounded-full bg-blue-50 flex-shrink-0 overflow-hidden border-2 border-transparent group-hover:border-blue-500 transition-colors">
+                        {member.image ? (
+                            <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+                        ) : (
+                            <img 
+                            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=eff6ff&color=0033A0&bold=true`} 
+                            alt={member.name} 
+                            className="w-full h-full object-cover" 
+                            />
+                        )}
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-gray-900 leading-tight">{member.name}</h4>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">{member.role}</p>
+                    </div>
+                    </motion.div>
+                ))}
+             </div>
+             <div className="flex justify-center mt-12">
+                 <button 
+                    onClick={() => setIsExpanded(false)}
+                    className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 text-gray-500 rounded-full text-sm font-bold shadow-sm hover:bg-gray-50 transition-all"
+                 >
+                    <ChevronUp className="w-4 h-4" />
+                    Collapse List
+                 </button>
+             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };
@@ -434,19 +676,22 @@ export default function App() {
   return (
     <main className="min-h-screen bg-slate-50 font-sans selection:bg-[#0033A0] selection:text-white overflow-x-hidden">
       <NoiseOverlay />
+      {/* <StickyNavbar /> */}
 
-      {/* Navigation (Transparent) */}
-      <nav className="fixed top-0 left-0 w-full z-40 px-6 py-6 flex justify-between items-center mix-blend-difference text-white pointer-events-none">
+      {/* Hero Navigation (Original - Fades out naturally due to scroll) */}
+      {/* <nav className="absolute top-0 left-0 w-full z-40 px-6 py-6 flex justify-between items-center mix-blend-difference text-white pointer-events-none">
         <span className="font-bold text-xl tracking-widest">QUL.</span>
         <div className="pointer-events-auto flex gap-4">
+        
           <button className="px-6 py-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-md hover:bg-white text-white hover:text-[#0033A0] transition-all text-sm font-medium">
             Login
           </button>
         </div>
-      </nav>
+      </nav> */}
 
       <ZoomHero />
       <ThemeManifesto />
+      <HighlightsGallery />
       <LiveDashboard />
       <CommitteeGrid />
       <Footer />
