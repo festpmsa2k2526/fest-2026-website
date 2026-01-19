@@ -52,30 +52,30 @@ const TEAMS = [
   { 
     id: 1, 
     name: "Aden", 
-    points: 1240, 
+    points: 46, 
     color: "from-blue-500 to-blue-600",
-    catScores: { sub: 300, jun: 400, sen: 540 } 
+    catScores: { sub: 0, jun: 46, sen: 0 } 
   },
   { 
     id: 2, 
     name: "Hormuz", 
-    points: 980, 
+    points: 50, 
     color: "from-emerald-500 to-emerald-600",
-    catScores: { sub: 200, jun: 350, sen: 430 } 
+    catScores: { sub: 0, jun: 50, sen: 0 } 
   },
   { 
     id: 3, 
     name: "Zanzibar", 
-    points: 1150, 
+    points: 79, 
     color: "from-purple-500 to-purple-600",
-    catScores: { sub: 400, jun: 300, sen: 450 } 
+    catScores: { sub: 0, jun: 79, sen: 0 } 
   },
   { 
     id: 4, 
     name: "Malacca", 
-    points: 890, 
+    points: 19, 
     color: "from-rose-500 to-rose-600",
-    catScores: { sub: 250, jun: 290, sen: 350 } 
+    catScores: { sub: 0, jun: 19, sen: 0 } 
   },
 ];
 
@@ -209,7 +209,7 @@ const HighlightsGallery = () => {
                     {[...HIGHLIGHTS, ...HIGHLIGHTS, ...HIGHLIGHTS].map((src, i) => (
                         <div key={i} className="relative w-[300px] h-[400px] md:w-[400px] md:h-[500px] shrink-0 rounded-2xl overflow-hidden group">
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 opacity-60 group-hover:opacity-40 transition-opacity"></div>
-                            <img src={src} alt="Highlight"  />
+                            <img src={src} alt="Highlight" />
                             <div className="absolute bottom-6 left-6 z-20">
                                 <span className="text-xs font-mono text-blue-400 mb-1 block">Day { (i % 3) + 1}</span>
                             </div>
