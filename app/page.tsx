@@ -194,9 +194,9 @@ const HighlightsGallery = () => {
     return (
         <section className="py-24 bg-slate-950 overflow-hidden relative">
             <div className="absolute inset-0 bg-[#0033A0]/5 pointer-events-none"></div>
-            <div className="container mx-auto px-6 mb-12 relative z-10">
+            <div className="container mx-auto px-6 mb-12  relative z-10 flex flex-col items-center text-center">
                 <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Highlights</h2>
-                <div className="h-1 w-20 bg-blue-500 rounded-full"></div>
+                <div className="h-1 w-50 bg-blue-500 rounded-full"></div>
             </div>
             
             <div className="flex overflow-hidden relative z-10">
@@ -209,7 +209,7 @@ const HighlightsGallery = () => {
                     {[...HIGHLIGHTS, ...HIGHLIGHTS, ...HIGHLIGHTS].map((src, i) => (
                         <div key={i} className="relative w-[300px] h-[400px] md:w-[400px] md:h-[500px] shrink-0 rounded-2xl overflow-hidden group">
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 opacity-60 group-hover:opacity-40 transition-opacity"></div>
-                            <img src={src} alt="Highlight" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 scale-100 group-hover:scale-110" />
+                            <img src={src} alt="Highlight"  />
                             <div className="absolute bottom-6 left-6 z-20">
                                 <span className="text-xs font-mono text-blue-400 mb-1 block">Day { (i % 3) + 1}</span>
                             </div>
