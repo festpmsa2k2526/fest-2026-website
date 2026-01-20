@@ -1,240 +1,423 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { createClient } from '@/app/utils/supabase/client'; // Check this path matches your project
 import { 
-  Trophy, Save, Lock, Home, User, Users, Star, 
-  Check, X, Copy, RefreshCw, LayoutTemplate
+  Trophy, ChevronRight, Save, Plus, Trash2, CheckCircle, AlertCircle
 } from 'lucide-react';
-import Link from 'next/link';
 
-// --- MOCK DATA FOR AUTOCOMPLETE ---
-const TEAMS = [
-    { id: 'GR1', name: "Hormuz", color: "blue", hex: "#3b82f6" },
-    { id: 'GR2', name: "Aden", color: "emerald", hex: "#10b981" },
-    { id: 'GR3', name: "Zanzibar", color: "red", hex: "#ef4444" },
-    { id: 'GR4', name: "Malacca", color: "amber", hex: "#f59e0b" }
+// ==========================================
+// ⚙️ CONFIGURATION
+// ==========================================
+
+const LEVELS = [
+  { id: 'sub-junior', label: 'Sub Junior', prefix: 'SJ' },
+  { id: 'junior', label: 'Junior', prefix: 'JU' },
+  { id: 'senior', label: 'Senior', prefix: 'SE' },
+  { id: 'general', label: 'General', prefix: 'GE' },
 ];
 
-export default function AdminDashboard() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [pin, setPin] = useState("");
-  const [generatedJSON, setGeneratedJSON] = useState("");
+const POINT_SYSTEM = {
+  'A': { 1: 12, 2: 8, 3: 4 },
+  'B': { 1: 10, 2: 6, 3: 3 },
+  'C': { 1: 20, 2: 15, 3: 10 } // Group events
+};
 
-  // CARD STATE
-  const [event, setEvent] = useState("");
-  const [section, setSection] = useState("Sub-Junior");
-  const [winnerName, setWinnerName] = useState("");
-  const [teamId, setTeamId] = useState("GR1");
-  const [position, setPosition] = useState("1");
-  const [grade, setGrade] = useState("A");
-  const [points, setPoints] = useState(12);
+// Points added for purely getting a grade (if applicable)
+const GRADE_POINTS = { 'A': 5, 'B': 3, 'C': 1, 'None': 0 };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pin === "2026") setIsAuthenticated(true);
-    else alert("Invalid PIN");
-  };
+type WinnerEntry = {
+  student_id: string | null;
+  team_id: string | null;
+  position: number | null; // 1, 2, 3 or null
+  grade: string; // 'A', 'B', 'C', or 'None'
+  points: number;
+};
 
-  const generateResult = () => {
-      const newResult = {
-          id: Date.now(),
-          event: event.toUpperCase(),
-          section,
-          winner: winnerName,
-          teamId,
-          position: parseInt(position),
-          grade,
-          points,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
+export default function AdminResultEntry() {
+  const supabase = createClient();
+  
+  // Steps: 0=Level, 1=Event, 2=Category, 3=Winners
+  const [step, setStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
+
+  // Data State
+  const [events, setEvents] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
+  const [teams, setTeams] = useState<any[]>([]);
+
+  // Selection State
+  const [selectedLevel, setSelectedLevel] = useState<string>('');
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [selectedCategory, setSelectedCategory] = useState<'A' | 'B' | 'C'>('A');
+  const [entries, setEntries] = useState<WinnerEntry[]>([
+    { student_id: '', team_id: null, position: 1, grade: 'None', points: 0 }
+  ]);
+
+  // ==========================================
+  // 🔄 DATA FETCHING
+  // ==========================================
+  useEffect(() => {
+    const fetchBaseData = async () => {
+      // 1. Fetch Students (Using 'chest_no' based on your CSV)
+      const { data: stuData } = await supabase
+        .from('students')
+        .select('id, name, chest_no, team_id');
       
-      const jsonString = JSON.stringify(newResult, null, 4);
-      setGeneratedJSON(prev => prev ? prev + ",\n" + jsonString : jsonString);
+      if (stuData) setStudents(stuData);
+
+      // 2. Fetch Teams
+      const { data: teamData } = await supabase
+        .from('teams')
+        .select('id, name');
+        
+      if (teamData) setTeams(teamData);
+    };
+    fetchBaseData();
+  }, []);
+
+  // Fetch events when Level changes
+  useEffect(() => {
+    if (!selectedLevel) return;
+    
+    const fetchEvents = async () => {
+      setLoading(true);
+      const levelConfig = LEVELS.find(l => l.id === selectedLevel);
+      if (!levelConfig) return;
+
+      // Filter by Event Code Prefix (e.g., 'JUON' or 'JUOF')
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        // Checks if event_code starts with Prefix+ON OR Prefix+OF
+        .or(`event_code.ilike.${levelConfig.prefix}ON%,event_code.ilike.${levelConfig.prefix}OF%`)
+        .order('name');
+      
+      if (data) setEvents(data);
+      setLoading(false);
+    };
+
+    fetchEvents();
+  }, [selectedLevel]);
+
+  // ==========================================
+  // 🧮 LOGIC HANDLERS
+  // ==========================================
+
+  // Auto-select category if event has 'grade_type'
+  const handleEventSelect = (event: any) => {
+    setSelectedEvent(event);
+    if (event.grade_type && ['A', 'B', 'C'].includes(event.grade_type)) {
+      setSelectedCategory(event.grade_type as 'A'|'B'|'C');
+    }
+    setStep(2);
   };
 
-  const clearCard = () => {
-      setEvent("");
-      setWinnerName("");
-      setPoints(0);
+  const handleEntryChange = (index: number, field: keyof WinnerEntry, value: any) => {
+    const newEntries = [...entries];
+    
+    // Update Field
+    (newEntries[index] as any)[field] = value;
+
+    // If student selected, auto-fill team_id from local student data
+    if (field === 'student_id') {
+      const student = students.find(s => s.id === value);
+      if (student) {
+        newEntries[index].team_id = student.team_id;
+      }
+    }
+
+    // Auto-Calculate Points
+    const entry = newEntries[index];
+    let totalPoints = 0;
+
+    // 1. Position Points
+    if (entry.position && entry.position <= 3) {
+      // @ts-ignore
+      totalPoints += POINT_SYSTEM[selectedCategory][entry.position] || 0;
+    }
+
+    // 2. Grade Points (Optional: Add this if grades add EXTRA points)
+    // Remove the next line if Position Points already include Grade Points
+    // @ts-ignore
+    totalPoints += GRADE_POINTS[entry.grade] || 0;
+
+    newEntries[index].points = totalPoints;
+    setEntries(newEntries);
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="absolute top-4 left-4">
-            <Link href="/" className="text-white/50 hover:text-white flex items-center gap-2">
-                <Home className="w-4 h-4" /> Back Home
-            </Link>
-        </div>
-        <form onSubmit={handleLogin} className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 w-full max-w-sm">
-          <div className="flex justify-center mb-6">
-             <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
-               <Lock className="text-white w-8 h-8" />
-             </div>
-          </div>
-          <h2 className="text-2xl font-bold text-white text-center mb-6">Result Admin</h2>
-          <input type="password" value={pin} onChange={(e) => setPin(e.target.value)} placeholder="PIN" className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-4 py-3 text-white mb-4 text-center tracking-widest text-xl" autoFocus />
-          <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg">Unlock</button>
-        </form>
-      </div>
-    );
-  }
+  const addEntry = () => {
+    // Suggest next position automatically
+    const lastPos = entries[entries.length - 1]?.position || 0;
+    const nextPos = lastPos < 3 ? lastPos + 1 : null;
+    
+    setEntries([...entries, { 
+      student_id: '', team_id: null, position: nextPos, grade: 'None', points: 0 
+    }]);
+  };
 
-  const selectedTeam = TEAMS.find(t => t.id === teamId);
+  const removeEntry = (index: number) => {
+    setEntries(entries.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setFeedback(null);
+
+    try {
+      const payload = entries.map(entry => ({
+        event_id: selectedEvent.id,
+        student_id: entry.student_id || null,
+        team_id: entry.team_id || null, 
+        position: entry.position, 
+        grade: entry.grade === 'None' ? null : entry.grade,
+        points: entry.points,
+        published: true, 
+      }));
+
+      const { error } = await supabase.from('results').insert(payload);
+
+      if (error) throw error;
+
+      setFeedback({ type: 'success', msg: 'Results Published Successfully!' });
+      
+      // Reset logic
+      setTimeout(() => {
+        setStep(0);
+        setEntries([{ student_id: '', team_id: null, position: 1, grade: 'None', points: 0 }]);
+        setFeedback(null);
+      }, 2000);
+
+    } catch (err: any) {
+      setFeedback({ type: 'error', msg: err.message || 'Failed to save results' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ==========================================
+  // 🖥️ UI RENDER
+  // ==========================================
 
   return (
-    <div className="min-h-screen bg-slate-100 font-sans p-4 md:p-8">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        {/* LEFT: THE EDITOR CARD */}
-        <div>
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                    <LayoutTemplate className="w-6 h-6 text-blue-600" /> Result Card Editor
-                </h1>
-                <button onClick={clearCard} className="text-sm text-gray-500 hover:text-red-500 flex items-center gap-1">
-                    <RefreshCw className="w-3 h-3" /> Reset
-                </button>
-            </div>
+    <div className="max-w-4xl mx-auto p-6 bg-slate-50 min-h-screen font-sans text-slate-900">
+      
+      <header className="mb-8">
+        <h1 className="text-3xl font-black text-[#0033A0] flex items-center gap-3">
+          <Trophy className="w-8 h-8 text-yellow-500" /> 
+          Result Manager
+        </h1>
+        <div className="flex items-center gap-2 text-sm text-slate-500 mt-2">
+          <span className={step >= 0 ? "text-blue-600 font-bold" : ""}>1. Level</span>
+          <ChevronRight className="w-4 h-4" />
+          <span className={step >= 1 ? "text-blue-600 font-bold" : ""}>2. Event</span>
+          <ChevronRight className="w-4 h-4" />
+          <span className={step >= 2 ? "text-blue-600 font-bold" : ""}>3. Category</span>
+          <ChevronRight className="w-4 h-4" />
+          <span className={step >= 3 ? "text-blue-600 font-bold" : ""}>4. Winners</span>
+        </div>
+      </header>
 
-            {/* LIVE PREVIEW CARD */}
-            <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 relative mb-8">
-                <div className="h-32 bg-gradient-to-r from-[#0033A0] to-blue-600 relative p-6 flex justify-between items-start">
-                    <div>
-                        <div className="inline-block bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-2">
-                            {section}
-                        </div>
-                        <input 
-                            type="text" 
-                            placeholder="EVENT NAME" 
-                            className="bg-transparent text-white text-3xl font-black uppercase placeholder:text-white/40 outline-none w-full"
-                            value={event}
-                            onChange={e => setEvent(e.target.value)}
-                        />
-                    </div>
-                    <Trophy className="w-12 h-12 text-yellow-400 opacity-80" />
-                </div>
+      {feedback && (
+        <div className={`p-4 mb-6 rounded-lg flex items-center gap-2 ${feedback.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          {feedback.type === 'success' ? <CheckCircle className="w-5 h-5"/> : <AlertCircle className="w-5 h-5"/>}
+          {feedback.msg}
+        </div>
+      )}
 
-                <div className="p-8">
-                    <div className="flex items-center gap-6 mb-8">
-                        <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center border-4 border-white shadow-lg -mt-16 relative z-10">
-                            <User className="w-8 h-8 text-gray-400" />
-                        </div>
-                        <div className="flex-1">
-                            <label className="text-xs font-bold text-gray-400 uppercase">Winner Name</label>
-                            <input 
-                                type="text" 
-                                placeholder="Student Name / Team Name" 
-                                className="w-full text-xl font-bold text-slate-900 border-b-2 border-transparent focus:border-blue-500 outline-none bg-transparent"
-                                value={winnerName}
-                                onChange={e => setWinnerName(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Group</label>
-                            <div className="flex flex-wrap gap-2">
-                                {TEAMS.map(t => (
-                                    <button 
-                                        key={t.id}
-                                        onClick={() => setTeamId(t.id)}
-                                        className={`px-3 py-1.5 rounded-lg text-sm font-bold border transition-all ${teamId === t.id ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-gray-500 border-gray-200'}`}
-                                    >
-                                        {t.name}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Position</label>
-                            <div className="flex gap-2">
-                                {['1', '2', '3'].map(p => (
-                                    <button 
-                                        key={p}
-                                        onClick={() => setPosition(p)}
-                                        className={`w-10 h-10 rounded-full font-bold flex items-center justify-center transition-all ${position === p ? 'bg-yellow-400 text-yellow-900 shadow-md transform scale-110' : 'bg-gray-100 text-gray-400'}`}
-                                    >
-                                        {p}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-6">
-                        <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Grade</label>
-                            <div className="flex gap-2">
-                                {['A', 'B', 'C'].map(g => (
-                                    <button 
-                                        key={g}
-                                        onClick={() => setGrade(g)}
-                                        className={`w-10 h-10 rounded-lg font-bold border flex items-center justify-center transition-all ${grade === g ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-400 border-gray-200'}`}
-                                    >
-                                        {g}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Points</label>
-                            <input 
-                                type="number" 
-                                className="w-full text-3xl font-black text-slate-900 outline-none"
-                                value={points}
-                                onChange={e => setPoints(parseInt(e.target.value))}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Section Selector Overlay */}
-                <div className="absolute top-4 right-4 flex flex-col gap-1 items-end">
-                     {['Sub-Junior', 'Junior', 'Senior', 'General', 'Foundation'].map(s => (
-                         <button 
-                            key={s} 
-                            onClick={() => setSection(s)}
-                            className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${section === s ? 'bg-white text-blue-600' : 'bg-black/20 text-white/60 hover:bg-black/40'}`}
-                         >
-                             {s}
-                         </button>
-                     ))}
-                </div>
-            </div>
-
-            <button 
-                onClick={generateResult}
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white text-lg font-bold py-4 rounded-xl shadow-xl flex items-center justify-center gap-2 transition-transform active:scale-95"
+      {/* STEP 1: SELECT LEVEL */}
+      {step === 0 && (
+        <div className="grid grid-cols-2 gap-4">
+          {LEVELS.map((level) => (
+            <button
+              key={level.id}
+              onClick={() => { setSelectedLevel(level.id); setStep(1); }}
+              className="p-8 bg-white border-2 border-slate-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-left group"
             >
-                <Save className="w-5 h-5" /> Generate Result JSON
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Select Level</span>
+              <span className="text-xl font-bold text-slate-800 group-hover:text-blue-700">{level.label}</span>
             </button>
+          ))}
         </div>
+      )}
 
-        {/* RIGHT: JSON OUTPUT */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col h-full">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-gray-900">Generated Data (Copy to Results Page)</h3>
-                <button 
-                    onClick={() => { navigator.clipboard.writeText(generatedJSON); alert("Copied!"); }}
-                    className="text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors"
+      {/* STEP 2: SELECT EVENT */}
+      {step === 1 && (
+        <div className="space-y-4">
+          <button onClick={() => setStep(0)} className="text-sm text-slate-500 hover:text-blue-600 mb-2">← Back to Levels</button>
+          <h2 className="text-xl font-bold mb-4">Select {LEVELS.find(l=>l.id===selectedLevel)?.label} Event</h2>
+          
+          {loading ? <div className="text-center py-10 text-slate-400">Loading Events...</div> : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {events.map((event) => (
+                <button
+                  key={event.id}
+                  onClick={() => handleEventSelect(event)}
+                  className="p-4 bg-white border border-slate-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all text-left flex justify-between items-center"
                 >
-                    <Copy className="w-4 h-4" /> Copy All
+                  <span className="font-semibold text-slate-700">{event.name}</span>
+                  <div className="text-right">
+                    <span className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-500 font-mono block mb-1">{event.event_code}</span>
+                    {event.grade_type && <span className="text-[10px] bg-yellow-100 text-yellow-800 px-1 rounded">Cat {event.grade_type}</span>}
+                  </div>
                 </button>
+              ))}
+              {events.length === 0 && <div className="text-slate-400 col-span-2 text-center py-8">No events found for this level.</div>}
             </div>
-            <textarea 
-                readOnly
-                className="flex-1 w-full bg-slate-900 text-green-400 font-mono text-xs p-4 rounded-xl resize-none outline-none"
-                value={`[\n${generatedJSON}\n]`}
-            />
-            <p className="text-xs text-gray-400 mt-4">
-                Instructions: Copy this JSON block and paste it into the `MANUAL_RESULTS` array in `app/results/page.tsx`.
-            </p>
+          )}
         </div>
+      )}
 
-      </div>
+      {/* STEP 3: SELECT CATEGORY */}
+      {step === 2 && (
+        <div className="space-y-6">
+           <button onClick={() => setStep(1)} className="text-sm text-slate-500 hover:text-blue-600">← Back to Events</button>
+           <h2 className="text-xl font-bold">Confirm Category for <span className="text-blue-600">{selectedEvent?.name}</span></h2>
+           
+           <div className="grid grid-cols-3 gap-6">
+              {['A', 'B', 'C'].map((cat) => (
+                <button
+                  key={cat}
+                  // @ts-ignore
+                  onClick={() => { setSelectedCategory(cat); setStep(3); }}
+                  className={`p-6 border-2 rounded-xl transition-all text-center relative overflow-hidden ${selectedCategory === cat ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-200' : 'border-slate-200 bg-white hover:border-blue-300'}`}
+                >
+                  <div className="text-4xl font-black text-slate-200 absolute -top-2 -right-2 opacity-50">{cat}</div>
+                  <div className="text-2xl font-bold text-slate-800 mb-2">Category {cat}</div>
+                  <div className="text-xs text-slate-500 space-y-1 font-mono">
+                    {/* @ts-ignore */}
+                    <div>1st: {POINT_SYSTEM[cat][1]} pts</div>
+                    {/* @ts-ignore */}
+                    <div>2nd: {POINT_SYSTEM[cat][2]} pts</div>
+                    {/* @ts-ignore */}
+                    <div>3rd: {POINT_SYSTEM[cat][3]} pts</div>
+                  </div>
+                </button>
+              ))}
+           </div>
+        </div>
+      )}
+
+      {/* STEP 4: ADD WINNERS */}
+      {step === 3 && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+             <button onClick={() => setStep(2)} className="text-sm text-slate-500 hover:text-blue-600">← Change Category</button>
+             <div className="text-right">
+                <div className="text-sm text-slate-500">Event: <b>{selectedEvent?.name}</b></div>
+                <div className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded inline-block font-bold">Category {selectedCategory}</div>
+             </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-50 text-slate-500 font-bold uppercase border-b">
+                <tr>
+                  <th className="p-4 w-24">Pos</th>
+                  <th className="p-4">Student (Chest No)</th>
+                  <th className="p-4 w-32">Grade</th>
+                  <th className="p-4 w-24">Points</th>
+                  <th className="p-4 w-10"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {entries.map((entry, index) => (
+                  <tr key={index}>
+                    {/* Position Input */}
+                    <td className="p-4">
+                      <select 
+                        value={entry.position || ''} 
+                        onChange={(e) => handleEntryChange(index, 'position', e.target.value ? parseInt(e.target.value) : null)}
+                        className="w-full p-2 border rounded font-bold text-center bg-slate-50"
+                      >
+                        <option value="1">1st</option>
+                        <option value="2">2nd</option>
+                        <option value="3">3rd</option>
+                        <option value="">-</option>
+                      </select>
+                    </td>
+
+                    {/* Participant Select */}
+                    <td className="p-4">
+                        <select 
+                          className="w-full p-2 border rounded bg-white"
+                          value={entry.student_id || ''}
+                          onChange={(e) => handleEntryChange(index, 'student_id', e.target.value)}
+                        >
+                          <option value="">Select Student...</option>
+                          {students.map(s => (
+                            <option key={s.id} value={s.id}>
+                              {s.name} (Chest: {s.chest_no})
+                            </option>
+                          ))}
+                        </select>
+                    </td>
+
+                    {/* Grade Select */}
+                    <td className="p-4">
+                      <div className="flex gap-1 justify-center">
+                        {['A', 'B', 'C', 'None'].map(g => (
+                          <button
+                            key={g}
+                            onClick={() => handleEntryChange(index, 'grade', g)}
+                            className={`px-2 py-1 rounded text-xs font-bold border transition-colors ${entry.grade === g ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-200 hover:border-slate-400'}`}
+                          >
+                            {g === 'None' ? '-' : g}
+                          </button>
+                        ))}
+                      </div>
+                    </td>
+
+                    {/* Calculated Points */}
+                    <td className="p-4">
+                      <div className="font-mono font-black text-blue-600 text-xl text-center">
+                        {entry.points}
+                      </div>
+                    </td>
+
+                    {/* Delete */}
+                    <td className="p-4 text-center">
+                      <button onClick={() => removeEntry(index)} className="text-red-300 hover:text-red-500 transition-colors">
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            <div className="p-4 bg-slate-50 border-t flex justify-between items-center">
+               <button 
+                 onClick={addEntry}
+                 className="flex items-center gap-2 text-sm font-bold text-blue-600 hover:bg-blue-100 px-4 py-2 rounded transition-colors"
+               >
+                 <Plus className="w-4 h-4" /> Add Participant
+               </button>
+               
+               <div className="text-xs text-slate-400 italic">
+                 Points = Position ({selectedCategory}) + Grade Bonus
+               </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4">
+            <button
+              onClick={handleSubmit}
+              disabled={loading || entries.length === 0}
+              className="flex items-center gap-2 bg-[#0033A0] text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-900 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105"
+            >
+              {loading ? 'Publishing...' : (
+                <>
+                  <Save className="w-5 h-5" /> Publish Results
+                </>
+              )}
+            </button>
+          </div>
+
+        </div>
+      )}
+
     </div>
   );
 }
