@@ -15,8 +15,8 @@ const COLORS = {
   card: "#1e293b"     // Slate 800
 };
 
-const BATCH_SIZE = 6; // Number of images to show at once
-const SLIDE_INTERVAL = 8000; // Time in ms before swapping images
+const BATCH_SIZE = 3; // Number of images to show at once
+const SLIDE_INTERVAL = 10000; // Time in ms before swapping images
 
 const LIVE_UPDATES = [
   "📢 Welcome to QUL '26 - PMSA Arts Fest",
@@ -32,17 +32,14 @@ const LIVE_UPDATES = [
 // 1. Result Card (TV Style - High Contrast, Larger Text)
 const TVResultCard = ({ event, teams }: { event: any, teams: any[] }) => {
   return (
-    <div className="w-[400px] bg-white rounded-xl overflow-hidden shadow-2xl border-l-8 border-[#0033A0] flex flex-col h-full mx-4 shrink-0">
-      <div className="bg-slate-100 p-4 border-b border-slate-200 flex justify-between items-center">
+    <div className="w-[350px] bg-white rounded-xl overflow-hidden shadow-2xl border-l-8 border-[#0033A0] flex flex-col h-full mx-4 shrink-0">
+      <div className="bg-slate-100 p-2 border-b border-slate-200 flex justify-between items-center">
         <div>
-          <span className="text-xs font-black text-slate-400 uppercase tracking-widest block">{event.category}</span>
-          <h3 className="text-xl font-black text-slate-800 leading-none mt-1 line-clamp-1">{event.eventName}</h3>
-        </div>
-        <div className="bg-[#0033A0] text-white text-xs font-mono py-1 px-2 rounded">
-          {event.event_id}
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">{event.category}</span>
+          <h3 className="text-[14px] font-black text-slate-800 leading-none mt-1 line-clamp-1">{event.eventName}</h3>
         </div>
       </div>
-      <div className="p-4 space-y-3">
+      <div className="p-2 space-y-3">
         {event.winners.slice(0, 3).map((w: any, i: number) => {
            const team = teams.find(t => t.id === w.teamId);
            return (
@@ -52,7 +49,7 @@ const TVResultCard = ({ event, teams }: { event: any, teams: any[] }) => {
                      {w.pos}
                    </div>
                    <div>
-                     <p className="font-bold text-slate-900 text-lg leading-tight line-clamp-1">{w.name}</p>
+                     <p className="font-bold text-slate-900 text-[14px] leading-tight line-clamp-1">{w.name}</p>
                      <p className="text-xs font-bold text-slate-500 uppercase">{team?.name || 'Individual'}</p>
                    </div>
                 </div>
@@ -79,14 +76,14 @@ const ResultTicker = ({ events, teams }: { events: any[], teams: any[] }) => {
 
   useAnimationFrame((t, delta) => {
     if (contentWidth === 0) return;
-    const speed = -0.15; // Speed of the ticker
+    const speed = -0.05; // Speed of the ticker
     let newX = x.get() + (speed * delta);
     if (newX <= -contentWidth) newX = 0;
     x.set(newX);
   });
 
   return (
-    <div className="overflow-hidden w-full bg-slate-200 py-6 border-t-4 border-[#0033A0]">
+    <div className="overflow-hidden w-full bg-slate-200 py-4 border-t-4 border-[#0033A0]">
       <motion.div ref={containerRef} className="flex w-max" style={{ x }}>
         {[...events, ...events].map((e, i) => (
           <TVResultCard key={`${e.id}-${i}`} event={e} teams={teams} />
@@ -104,7 +101,7 @@ const LiveClock = () => {
     return () => clearInterval(timer);
   }, []);
   return (
-    <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md px-6 py-3 rounded-full border border-white/20">
+    <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md px-6 py-2 rounded-full border border-white/20">
       <Clock className="w-6 h-6 text-yellow-400" />
       <span className="text-2xl font-mono font-bold text-white tracking-widest">
         {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -194,7 +191,7 @@ export default function TVDisplayPage() {
   const currentImages = images.slice(batchIndex * BATCH_SIZE, (batchIndex + 1) * BATCH_SIZE);
 
   return (
-    <div className="bg-slate-950 w-screen h-screen overflow-hidden text-white font-sans flex flex-col relative">
+    <div className="bg-slate-950 h-screen w-screen overflow-hidden text-white font-sans flex flex-col relative">
       
       {/* 1. TOP BAR */}
       <header className="h-[12vh] flex items-center justify-between px-10 border-b border-white/10 bg-slate-900/50 backdrop-blur-sm z-50">
@@ -211,11 +208,11 @@ export default function TVDisplayPage() {
       </header>
 
       {/* 2. MAIN CONTENT (GALLERY) */}
-      <main className="flex-1 p-10 relative">
+      <main className="flex-1 h-[30dvh] p-2 relative">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#0033A0_0%,transparent_70%)] opacity-20 pointer-events-none"></div>
         
         {/* Animated Grid */}
-        <div className="grid grid-cols-3 gap-6 h-full w-full">
+        <div className="grid grid-cols-3 gap-6 h-[50dvh] w-[70dvw]">
           <AnimatePresence mode="wait">
             {currentImages.length > 0 ? (
               currentImages.map((src, i) => (
@@ -243,15 +240,18 @@ export default function TVDisplayPage() {
             )}
           </AnimatePresence>
         </div>
+        <div>
+            {/* point table should be added at the right side of the gallery */}
+        </div>
       </main>
 
       {/* 3. FOOTER AREA (RESULTS + NOTIFICATIONS) */}
-      <div className="h-[28vh] flex flex-col bg-slate-900 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-40 relative">
+      <div className="flex flex-col bg-slate-900 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-40 relative">
          
          {/* RESULT MARQUEE */}
          <div className="flex-1 relative">
-            <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-slate-900 to-transparent z-10"></div>
-            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-slate-900 to-transparent z-10"></div>
+            <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-slate-900 to-transparent z-10"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-slate-900 to-transparent z-10"></div>
             
             {events.length > 0 ? (
                <ResultTicker events={events} teams={teams} />
@@ -263,19 +263,19 @@ export default function TVDisplayPage() {
          </div>
 
          {/* NOTIFICATION TICKER (BOTTOM STRIP) */}
-         <div className="h-[6vh] bg-yellow-400 flex items-center overflow-hidden relative">
+         <div className="bottom-0 h-[4vh] bg-yellow-400 flex items-center overflow-hidden relative">
             <div className="bg-black/90 h-full px-8 flex items-center gap-2 z-20 skew-x-[-12deg] -ml-4">
                <Zap className="w-6 h-6 text-yellow-400 animate-pulse skew-x-[12deg]" />
                <span className="text-white font-black uppercase tracking-widest text-lg skew-x-[12deg]">Updates</span>
             </div>
             
             <motion.div 
-              className="flex whitespace-nowrap gap-16 items-center pl-10"
+              className="flex whitespace-nowrap gap-8 items-center pl-10"
               animate={{ x: [0, -1000] }}
               transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
             >
                {[...LIVE_UPDATES, ...LIVE_UPDATES, ...LIVE_UPDATES].map((txt, i) => (
-                 <span key={i} className="text-black font-bold text-xl uppercase flex items-center gap-4">
+                 <span key={i} className="text-black font-bold text-sm uppercase flex items-center gap-4">
                     {txt}
                     <span className="w-2 h-2 bg-black rounded-full opacity-50"></span>
                  </span>
