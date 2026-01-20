@@ -238,7 +238,7 @@ export default function AdminResultEntry() {
   // ==========================================
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-slate-50 min-h-screen font-sans text-slate-900">
+    <div className="max-w-full mx-auto p-6 bg-slate-50 min-h-screen font-sans text-slate-900">
       
       <header className="mb-8">
         <h1 className="text-3xl font-black text-[#0033A0] flex items-center gap-3">

@@ -5,7 +5,8 @@ import {
   motion,
   useScroll,
   useTransform,
-  useMotionValueEvent,
+  useMotionValue,       // <--- ADDED
+  useAnimationFrame,    // <--- ADDED
   AnimatePresence
 } from 'framer-motion';
 import {
@@ -17,11 +18,11 @@ import { createClient } from '@/app/utils/supabase/client';
 
 // --- CONFIGURATION ---
 const LIVE_UPDATES = [
-  "📢 Registration closes in 2 hours for Off-stage events.",
-  "🏆 Junior Essay Writing Results Published - Check Leaderboard.",
-  "📍 Senior Debate (Prelims) starting at Auditorium A at 2:00 PM.",
+  "📢 Inaguration Ceremony Starting Soon.",
+  "🏆  Team Zanzibar Is Leading With 131 Points",
+  "📍 Results Published - Check Leaderboard.",
   "✨ 'Huwa Allah' - Recognition to Expression.",
-  "⚡️ Stage 2 Schedule Released."
+  "⚡️ Schedule Released."
 ];
 
 // Committee List (Static for now)
@@ -100,36 +101,83 @@ const InfiniteMarquee = () => {
 
 // --- UPDATED DYNAMIC SECTIONS ---
 
-// 1. Highlights Gallery (Accepts props now)
+// 1. Highlights Gallery (Updated to Draggable Infinite Loop)
 const HighlightsGallery = ({ images }: { images: string[] }) => {
+  const x = useMotionValue(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [contentWidth, setContentWidth] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Measure content width for the loop
+  useEffect(() => {
+    if (containerRef.current && images.length > 0) {
+      // We calculate half the scrollWidth because we duplicated the list 4 times, 
+      // but essentially we just need to know when one full set has passed.
+      // A safer bet for smooth looping with 4x duplication is to loop after 1 set passes.
+      // Total width = width of 1 set * 4. We want to loop when x reaches -width_of_1_set.
+      // Effectively: scrollWidth / 4. 
+      // However, the standard trick is often measuring the first child or dividing total by duplication factor.
+      
+      // Let's rely on scrollWidth / 4 (since we concat 4 times).
+      setContentWidth(containerRef.current.scrollWidth / 4);
+    }
+  }, [images]);
+
+  useAnimationFrame((t, delta) => {
+    if (isDragging || contentWidth === 0) return;
+
+    // Adjust speed here (-0.05 is standard, make smaller for slower)
+    const moveBy = -0.05 * delta; 
+    let newX = x.get() + moveBy;
+
+    // Infinite Loop: If we've scrolled past one full set of images, snap back
+    if (newX <= -contentWidth) {
+      newX = 0;
+    }
+
+    x.set(newX);
+  });
+
   return (
     <section className="py-24 bg-slate-950 overflow-hidden relative">
       <div className="absolute inset-0 bg-[#0033A0]/5 pointer-events-none"></div>
-      <div className="container mx-auto px-6 mb-12  relative z-10 flex flex-col items-center text-center">
+      
+      {/* Title Section */}
+      <div className="container mx-auto px-6 mb-12 relative z-10 flex flex-col items-center text-center">
         <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">Highlights</h2>
         <div className="h-1 w-50 bg-blue-500 rounded-full"></div>
       </div>
 
+      {/* Draggable Slider */}
       <div className="flex overflow-hidden relative z-10">
         {images.length > 0 ? (
           <motion.div
-            className="flex gap-6 px-6"
-            animate={{ x: ["0%", "-50%"] }}
-            transition={{ duration: 100, ease: "linear", repeat: Infinity }}
+            ref={containerRef}
+            className="flex gap-6 px-6 cursor-grab active:cursor-grabbing"
+            style={{ x }} // Bind motion value
+            drag="x"      // Enable Drag
+            dragConstraints={{ right: 0 }} // Don't allow dragging into whitespace on left
+            onDragStart={() => setIsDragging(true)}
+            onDragEnd={() => setIsDragging(false)}
           >
-            {/* Duplicate list for infinite loop */}
+            {/* Duplicate list 4 times for smooth infinite loop */}
             {[...images, ...images, ...images, ...images].map((src, i) => (
-              <div key={i} className="relative w-[300px] h-[400px] md:w-[400px] md:h-[500px] shrink-0 rounded-2xl overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 opacity-60 group-hover:opacity-40 transition-opacity"></div>
-                <img src={src} alt="Highlight" className="w-full h-full object-cover" />
-                <div className="absolute bottom-6 left-6 z-20">
-                  <span className="text-xs font-mono text-blue-400 mb-1 block">Day {(i % 3) + 1}</span>
-                </div>
+              <div 
+                key={i} 
+                className="relative w-[300px] h-[400px] md:w-[400px] md:h-[500px] shrink-0 rounded-2xl overflow-hidden group pointer-events-none select-none"
+              >
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 opacity-60 group-hover:opacity-40 transition-opacity"></div>
+                 <img src={src} alt="Highlight" className="w-full h-full object-cover" />
+                 <div className="absolute bottom-6 left-6 z-20">
+                   <span className="text-xs font-mono text-blue-400 mb-1 block">Day {(i % 3) + 1}</span>
+                 </div>
               </div>
             ))}
           </motion.div>
         ) : (
-            <div className="text-white text-center w-full opacity-50">Loading Highlights...</div>
+           <div className="text-white text-center w-full opacity-50 flex justify-center items-center py-20">
+             <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading Highlights...
+           </div>
         )}
       </div>
     </section>
@@ -254,7 +302,7 @@ const LiveDashboard = ({ teamData, loading }: { teamData: any[], loading: boolea
 
           <a href="#" className="bg-yellow-400 hover:bg-yellow-300 transition-colors rounded-2xl p-6 text-[#0033A0] flex flex-col justify-center items-center gap-3 shadow-xl text-center group">
             <Download className="w-10 h-10 group-hover:scale-110 transition-transform" />
-            <span className="font-bold text-lg leading-tight">Download Manual</span>
+            <span className="font-bold text-lg leading-tight">Download Schedule</span>
           </a>
 
           {/* New Results CTA */}
@@ -293,7 +341,7 @@ const ZoomHero = () => {
           <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2">
             <SpinningAsterisk className="w-[80vh] h-[80vh] md:w-[150vh] md:h-[150vh] text-blue-300/10" />
           </div>
-          <div className="absolute right-12 top-1/2 -translate-y-1/2">
+          <div className="hidden md:block absolute right-12 top-1/2 -translate-y-1/2">
             <SpinningAsterisk className="w-12 h-12 md:w-24 md:h-24 text-blue-300/20" />
           </div>
         </div>
@@ -312,7 +360,7 @@ const ZoomHero = () => {
 
         {/* Zooming Logo Container */}
         <div className="relative z-20 flex flex-col items-center mb-12">
-          <div className="relative w-48 h-48 md:w-180 md:h-180 mb-8 drop-shadow-[0_0_50px_rgba(255,255,255,0.2)]">
+          <div className="relative w-100 h-100 md:w-180 md:h-180 mb-8 drop-shadow-[0_0_50px_rgba(255,255,255,0.2)]">
             <img src="/Logo_White.png" alt="QUL Logo" className="w-full h-full object-contain" />
           </div>
         </div>
