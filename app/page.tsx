@@ -82,7 +82,7 @@ const SpinningAsterisk = ({ className }: { className: string }) => (
 const InfiniteMarquee = () => {
   return (
     <div className="relative flex overflow-hidden bg-white/5 backdrop-blur-md border-y border-white/10 py-4">
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0033A0] via-transparent to-[#0033A0] z-10 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-linear-to-rrom-[#0033A0] via-transparent to-[#0033A0] z-10 pointer-events-none"></div>
       <motion.div
         className="flex gap-12 whitespace-nowrap"
         animate={{ x: [0, -1000] }}
@@ -101,7 +101,7 @@ const InfiniteMarquee = () => {
 
 // --- UPDATED DYNAMIC SECTIONS ---
 
-// 1. Highlights Gallery (Updated to Draggable Infinite Loop)
+// 1. Highlights Gallery (Updated with Skeleton)
 const HighlightsGallery = ({ images }: { images: string[] }) => {
   const x = useMotionValue(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -111,30 +111,17 @@ const HighlightsGallery = ({ images }: { images: string[] }) => {
   // Measure content width for the loop
   useEffect(() => {
     if (containerRef.current && images.length > 0) {
-      // We calculate half the scrollWidth because we duplicated the list 4 times, 
-      // but essentially we just need to know when one full set has passed.
-      // A safer bet for smooth looping with 4x duplication is to loop after 1 set passes.
-      // Total width = width of 1 set * 4. We want to loop when x reaches -width_of_1_set.
-      // Effectively: scrollWidth / 4. 
-      // However, the standard trick is often measuring the first child or dividing total by duplication factor.
-      
-      // Let's rely on scrollWidth / 4 (since we concat 4 times).
       setContentWidth(containerRef.current.scrollWidth / 4);
     }
   }, [images]);
 
   useAnimationFrame((t, delta) => {
     if (isDragging || contentWidth === 0) return;
-
-    // Adjust speed here (-0.05 is standard, make smaller for slower)
     const moveBy = -0.05 * delta; 
     let newX = x.get() + moveBy;
-
-    // Infinite Loop: If we've scrolled past one full set of images, snap back
     if (newX <= -contentWidth) {
       newX = 0;
     }
-
     x.set(newX);
   });
 
@@ -148,19 +135,19 @@ const HighlightsGallery = ({ images }: { images: string[] }) => {
         <div className="h-1 w-50 bg-blue-500 rounded-full"></div>
       </div>
 
-      {/* Draggable Slider */}
+      {/* Content Area */}
       <div className="flex overflow-hidden relative z-10">
         {images.length > 0 ? (
+          /* ACTUAL CONTENT */
           <motion.div
             ref={containerRef}
             className="flex gap-6 px-6 cursor-grab active:cursor-grabbing"
-            style={{ x }} // Bind motion value
-            drag="x"      // Enable Drag
-            dragConstraints={{ right: 0 }} // Don't allow dragging into whitespace on left
+            style={{ x }} 
+            drag="x"      
+            dragConstraints={{ right: 0 }} 
             onDragStart={() => setIsDragging(true)}
             onDragEnd={() => setIsDragging(false)}
           >
-            {/* Duplicate list 4 times for smooth infinite loop */}
             {[...images, ...images, ...images, ...images].map((src, i) => (
               <div 
                 key={i} 
@@ -175,8 +162,24 @@ const HighlightsGallery = ({ images }: { images: string[] }) => {
             ))}
           </motion.div>
         ) : (
-           <div className="text-white text-center w-full opacity-50 flex justify-center items-center py-20">
-             <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading Highlights...
+           /* SKELETON LOADER */
+           <div className="flex gap-6 px-6 overflow-hidden w-full">
+             {/* Generate 5 dummy cards to fill the screen */}
+             {[...Array(5)].map((_, i) => (
+               <div 
+                 key={i}
+                 className="w-[300px] h-[400px] md:w-[400px] md:h-[500px] shrink-0 rounded-2xl bg-slate-800/50 border border-white/5 animate-pulse relative overflow-hidden"
+               >
+                 {/* Shimmer effect overlay */}
+                 <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent skew-x-12 opacity-20"></div>
+                 
+                 {/* Fake Text Lines */}
+                 <div className="absolute bottom-6 left-6 right-6">
+                   <div className="h-2 w-16 bg-slate-600 rounded mb-2"></div>
+                   <div className="h-2 w-full bg-slate-700 rounded"></div>
+                 </div>
+               </div>
+             ))}
            </div>
         )}
       </div>
@@ -190,7 +193,7 @@ const LiveDashboard = ({ teamData, loading }: { teamData: any[], loading: boolea
   const maxPoints = teamData.length > 0 ? Math.max(...teamData.map(t => t.points)) : 100;
 
   return (
-    <section className="relative py-24 bg-[#0033A0] text-white overflow-hidden">
+    <section id='leaderboard' className="relative py-24 bg-[#0033A0] text-white overflow-hidden">
       <div className="absolute top-0 w-full z-20">
         <InfiniteMarquee />
       </div>
@@ -300,7 +303,7 @@ const LiveDashboard = ({ teamData, loading }: { teamData: any[], loading: boolea
             </div>
           </div>
 
-          <a href="#" className="bg-yellow-400 hover:bg-yellow-300 transition-colors rounded-2xl p-6 text-[#0033A0] flex flex-col justify-center items-center gap-3 shadow-xl text-center group">
+          <a href="https://drive.google.com/file/d/1BDWc-Cu2eYdfodH6m6GRcO6NrlksG_AC/view?usp=drive_link" target="_blank" className="bg-yellow-400 hover:bg-yellow-300 transition-colors rounded-2xl p-6 text-[#0033A0] flex flex-col justify-center items-center gap-3 shadow-xl text-center group">
             <Download className="w-10 h-10 group-hover:scale-110 transition-transform" />
             <span className="font-bold text-lg leading-tight">Download Schedule</span>
           </a>
@@ -511,15 +514,15 @@ const Footer = () => (
         <div className="grid grid-cols-2 gap-12 text-sm text-gray-400">
           <ul className="space-y-4">
             <li><span className="text-white font-bold mb-4 block">Events</span></li>
-            <li><a href="#" className="hover:text-blue-400 transition-colors">Schedule</a></li>
-            <li><a href="#" className="hover:text-blue-400 transition-colors">Results</a></li>
-            <li><a href="#" className="hover:text-blue-400 transition-colors">Leaderboard</a></li>
+            <li><a href="https://drive.google.com/file/d/1BDWc-Cu2eYdfodH6m6GRcO6NrlksG_AC/view?usp=drive_link" target="_blank" className="hover:text-blue-400 transition-colors">Schedule</a></li>
+            <li><a href="/results" className="hover:text-blue-400 transition-colors">Results</a></li>
+            <li><a href="/#leaderboard" className="hover:text-blue-400 transition-colors">Leaderboard</a></li>
           </ul>
           <ul className="space-y-4">
             <li><span className="text-white font-bold mb-4 block">Connect</span></li>
-            <li><a href="#" className="hover:text-blue-400 transition-colors">Instagram</a></li>
-            <li><a href="#" className="hover:text-blue-400 transition-colors">YouTube</a></li>
-            <li><a href="#" className="hover:text-blue-400 transition-colors">Contact</a></li>
+            <li><a href="https://www.instagram.com/wafypmsa_official" target="_blank" className="hover:text-blue-400 transition-colors">Instagram</a></li>
+            <li><a href="https://www.youtube.com/@munthajulafnanstudentsasso6980" target="_blank" className="hover:text-blue-400 transition-colors">YouTube</a></li>
+            <li><a href="mailto:masapmsawafy@gmail.com" target="_blank" className="hover:text-blue-400 transition-colors">Contact</a></li>
           </ul>
         </div>
       </div>

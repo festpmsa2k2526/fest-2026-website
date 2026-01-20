@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // <--- ADDED THIS
+import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/app/utils/supabase/client'; 
 import { 
-  Trophy, ChevronRight, Save, Plus, Trash2, CheckCircle, AlertCircle, Loader2 // <--- ADDED Loader2
+  Trophy, ChevronRight, Save, Plus, Trash2, CheckCircle, AlertCircle, Loader2, Lock
 } from 'lucide-react';
 
 // ==========================================
@@ -24,23 +24,136 @@ const POINT_SYSTEM = {
   'C': { 1: 20, 2: 15, 3: 10 } // Group events
 };
 
-// Points added for purely getting a grade (if applicable)
 const GRADE_POINTS = { 'A': 5, 'B': 3, 'C': 1, 'None': 0 };
 
 type WinnerEntry = {
   student_id: string | null;
   team_id: string | null;
-  position: number | null; // 1, 2, 3 or null
-  grade: string; // 'A', 'B', 'C', or 'None'
+  position: number | null; 
+  grade: string; 
   points: number;
 };
 
+// ==========================================
+// 🔍 SEARCH COMPONENT (Autocomplete)
+// ==========================================
+const StudentAutocomplete = ({ 
+  students, 
+  levelLabel, 
+  value, 
+  onChange 
+}: { 
+  students: any[], 
+  levelLabel: string, 
+  value: string | null, 
+  onChange: (id: string) => void 
+}) => {
+  const [query, setQuery] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Sync internal text when the parent value (student_id) changes
+  useEffect(() => {
+    if (value) {
+      const selected = students.find(s => s.id === value);
+      if (selected) {
+        setQuery(`${selected.name} (${selected.chest_no})`);
+      }
+    } else {
+      setQuery('');
+    }
+  }, [value, students]);
+
+  // Handle outside clicks to close dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // 1. Filter by Level/Section (Case insensitive)
+  const levelStudents = students.filter(s => {
+    if (!s.section) return true; // Show all if section is missing (safety)
+    
+    // Normalize both strings to lower case and remove spaces/dashes for better matching
+    // e.g. "Sub Junior" matches "sub-junior"
+    const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return normalize(s.section) === normalize(levelLabel);
+  });
+
+  // 2. Filter by Search Query
+  const filteredStudents = levelStudents.filter(s => 
+    s.name.toLowerCase().includes(query.toLowerCase()) || 
+    (s.chest_no && s.chest_no.toString().includes(query))
+  );
+
+  return (
+    <div className="relative w-full" ref={wrapperRef}>
+      <input
+        type="text"
+        className="w-full p-2 border rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+        placeholder={levelLabel ? `Search ${levelLabel} student...` : "Select Level first..."}
+        value={query}
+        disabled={!levelLabel}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setIsOpen(true);
+          // If user clears input, clear the selection
+          if (e.target.value === '') onChange('');
+        }}
+        onFocus={() => setIsOpen(true)}
+      />
+      
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+          {filteredStudents.length > 0 ? (
+            filteredStudents.map(s => (
+              <button
+                key={s.id}
+                type="button" // Prevent form submission
+                className="w-full text-left px-4 py-2 hover:bg-blue-50 flex justify-between items-center border-b border-slate-50 last:border-0 group transition-colors"
+                onClick={() => {
+                  onChange(s.id);
+                  setQuery(`${s.name} (${s.chest_no})`);
+                  setIsOpen(false);
+                }}
+              >
+                <div>
+                  <div className="font-bold text-slate-800 text-sm">{s.name}</div>
+                  <div className="text-[10px] text-slate-400 uppercase">{s.section}</div>
+                </div>
+                <span className="text-xs font-mono font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded group-hover:bg-blue-200 group-hover:text-blue-800">
+                  #{s.chest_no}
+                </span>
+              </button>
+            ))
+          ) : (
+            <div className="p-3 text-xs text-slate-400 text-center">
+              {levelStudents.length === 0 
+                ? `No students found in "${levelLabel}" section.` 
+                : "No matching student found."}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ==========================================
+// 🚀 MAIN ADMIN COMPONENT
+// ==========================================
+
 export default function AdminResultEntry() {
   const supabase = createClient();
-  const router = useRouter(); // <--- Initialize Router
+  const router = useRouter(); 
   
   // 🔒 AUTH STATE
-  const [isAuthorized, setIsAuthorized] = useState(false); // <--- State to track if user is allowed
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   // Steps: 0=Level, 1=Event, 2=Category, 3=Winners
   const [step, setStep] = useState(0);
@@ -51,6 +164,9 @@ export default function AdminResultEntry() {
   const [events, setEvents] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
+  
+  // Existing results cache
+  const [existingResults, setExistingResults] = useState<Record<string, number[]>>({});
 
   // Selection State
   const [selectedLevel, setSelectedLevel] = useState<string>('');
@@ -61,16 +177,14 @@ export default function AdminResultEntry() {
   ]);
 
   // ==========================================
-  // 🔒 AUTH CHECK (NEW CODE)
+  // 🔒 AUTH CHECK
   // ==========================================
   useEffect(() => {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        // Not logged in? Redirect to login page
         router.push('/login');
       } else {
-        // Logged in? Grant access
         setIsAuthorized(true);
       }
     };
@@ -81,14 +195,13 @@ export default function AdminResultEntry() {
   // 🔄 DATA FETCHING
   // ==========================================
   useEffect(() => {
-    // Only fetch data if authorized
     if (!isAuthorized) return; 
 
     const fetchBaseData = async () => {
-      // 1. Fetch Students (Using 'chest_no' based on your CSV)
+      // 1. Fetch Students (Include 'section' for filtering)
       const { data: stuData } = await supabase
         .from('students')
-        .select('id, name, chest_no, team_id');
+        .select('id, name, chest_no, team_id, section');
       
       if (stuData) setStudents(stuData);
 
@@ -100,9 +213,9 @@ export default function AdminResultEntry() {
       if (teamData) setTeams(teamData);
     };
     fetchBaseData();
-  }, [isAuthorized]); // Depend on isAuthorized
+  }, [isAuthorized]);
 
-  // Fetch events when Level changes
+  // Fetch events AND check for existing results when Level changes
   useEffect(() => {
     if (!selectedLevel) return;
     
@@ -111,15 +224,42 @@ export default function AdminResultEntry() {
       const levelConfig = LEVELS.find(l => l.id === selectedLevel);
       if (!levelConfig) return;
 
-      // Filter by Event Code Prefix (e.g., 'JUON' or 'JUOF')
-      const { data, error } = await supabase
+      // 1. Fetch Events
+      const { data: eventsData } = await supabase
         .from('events')
         .select('*')
-        // Checks if event_code starts with Prefix+ON OR Prefix+OF
         .or(`event_code.ilike.${levelConfig.prefix}ON%,event_code.ilike.${levelConfig.prefix}OF%`)
         .order('name');
       
-      if (data) setEvents(data);
+      if (eventsData) {
+        setEvents(eventsData);
+
+        // 2. Check for existing results
+        const eventIds = eventsData.map(e => e.id);
+        if (eventIds.length > 0) {
+            const { data: resultsData } = await supabase
+                .from('results')
+                .select('event_id, position')
+                .in('event_id', eventIds);
+
+            const resultMap: Record<string, number[]> = {};
+            
+            if (resultsData) {
+                resultsData.forEach((r: any) => {
+                    if (!resultMap[r.event_id]) resultMap[r.event_id] = [];
+                    if (r.position && !resultMap[r.event_id].includes(r.position)) {
+                        resultMap[r.event_id].push(r.position);
+                    }
+                });
+                // Sort positions
+                Object.keys(resultMap).forEach(key => {
+                    resultMap[key].sort((a, b) => a - b);
+                });
+                
+                setExistingResults(resultMap);
+            }
+        }
+      }
       setLoading(false);
     };
 
@@ -130,7 +270,6 @@ export default function AdminResultEntry() {
   // 🧮 LOGIC HANDLERS
   // ==========================================
 
-  // Auto-select category if event has 'grade_type'
   const handleEventSelect = (event: any) => {
     setSelectedEvent(event);
     if (event.grade_type && ['A', 'B', 'C'].includes(event.grade_type)) {
@@ -141,11 +280,9 @@ export default function AdminResultEntry() {
 
   const handleEntryChange = (index: number, field: keyof WinnerEntry, value: any) => {
     const newEntries = [...entries];
-    
-    // Update Field
     (newEntries[index] as any)[field] = value;
 
-    // If student selected, auto-fill team_id from local student data
+    // Logic: If student ID changes, auto-fill Team ID
     if (field === 'student_id') {
       const student = students.find(s => s.id === value);
       if (student) {
@@ -153,18 +290,15 @@ export default function AdminResultEntry() {
       }
     }
 
-    // Auto-Calculate Points
+    // Auto Calc Points
     const entry = newEntries[index];
     let totalPoints = 0;
 
-    // 1. Position Points
     if (entry.position && entry.position <= 3) {
       // @ts-ignore
       totalPoints += POINT_SYSTEM[selectedCategory][entry.position] || 0;
     }
 
-    // 2. Grade Points (Optional: Add this if grades add EXTRA points)
-    // Remove the next line if Position Points already include Grade Points
     // @ts-ignore
     totalPoints += GRADE_POINTS[entry.grade] || 0;
 
@@ -173,7 +307,6 @@ export default function AdminResultEntry() {
   };
 
   const addEntry = () => {
-    // Suggest next position automatically
     const lastPos = entries[entries.length - 1]?.position || 0;
     const nextPos = lastPos < 3 ? lastPos + 1 : null;
     
@@ -207,7 +340,6 @@ export default function AdminResultEntry() {
 
       setFeedback({ type: 'success', msg: 'Results Published Successfully!' });
       
-      // Reset logic
       setTimeout(() => {
         setStep(0);
         setEntries([{ student_id: '', team_id: null, position: 1, grade: 'None', points: 0 }]);
@@ -221,9 +353,6 @@ export default function AdminResultEntry() {
     }
   };
 
-  // ==========================================
-  // 🚫 BLOCK UNAUTHORIZED ACCESS
-  // ==========================================
   if (!isAuthorized) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-slate-50 flex-col gap-4 text-slate-400">
@@ -234,12 +363,13 @@ export default function AdminResultEntry() {
   }
 
   // ==========================================
-  // 🖥️ UI RENDER (Only Shows if Authorized)
+  // 🖥️ UI RENDER
   // ==========================================
 
   return (
     <div className="max-w-full mx-auto p-6 bg-slate-50 min-h-screen font-sans text-slate-900">
       
+      {/* Header */}
       <header className="mb-8">
         <h1 className="text-3xl font-black text-[#0033A0] flex items-center gap-3">
           <Trophy className="w-8 h-8 text-yellow-500" /> 
@@ -286,20 +416,54 @@ export default function AdminResultEntry() {
           <h2 className="text-xl font-bold mb-4">Select {LEVELS.find(l=>l.id===selectedLevel)?.label} Event</h2>
           
           {loading ? <div className="text-center py-10 text-slate-400">Loading Events...</div> : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {events.map((event) => (
-                <button
-                  key={event.id}
-                  onClick={() => handleEventSelect(event)}
-                  className="p-4 bg-white border border-slate-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all text-left flex justify-between items-center"
-                >
-                  <span className="font-semibold text-slate-700">{event.name}</span>
-                  <div className="text-right">
-                    <span className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-500 font-mono block mb-1">{event.event_code}</span>
-                    {event.grade_type && <span className="text-[10px] bg-yellow-100 text-yellow-800 px-1 rounded">Cat {event.grade_type}</span>}
-                  </div>
-                </button>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              {events.map((event) => {
+                 const positions = existingResults[event.id];
+                 const hasResults = positions && positions.length > 0;
+
+                 return (
+                    <button
+                      key={event.id}
+                      onClick={() => !hasResults && handleEventSelect(event)}
+                      disabled={hasResults}
+                      className={`
+                        p-4 border rounded-lg text-left flex justify-between items-center transition-all relative overflow-hidden
+                        ${hasResults 
+                             ? 'bg-slate-100 border-slate-200 cursor-not-allowed opacity-80' 
+                             : 'bg-white border-slate-200 hover:border-blue-500 hover:shadow-md' 
+                         }
+                      `}
+                    >
+                      <div className="flex flex-col">
+                        <span className={`font-semibold ${hasResults ? 'text-slate-500' : 'text-slate-700'}`}>
+                            {event.name}
+                        </span>
+                        
+                        {hasResults && (
+                           <div className="flex items-center gap-1 mt-1">
+                               <span className="text-[10px] text-green-600 font-bold bg-green-50 px-1.5 py-0.5 rounded border border-green-100">
+                                 Published
+                               </span>
+                               <span className="text-[10px] text-slate-400">
+                                 (Pos: {positions.join(', ')})
+                               </span>
+                           </div>
+                        )}
+                      </div>
+
+                      <div className="text-right z-10">
+                         {hasResults ? (
+                             <Lock className="w-5 h-5 text-slate-400" />
+                         ) : (
+                             <>
+                                <span className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-500 font-mono block mb-1">{event.event_code}</span>
+                                {event.grade_type && <span className="text-[10px] bg-yellow-100 text-yellow-800 px-1 rounded">Cat {event.grade_type}</span>}
+                             </>
+                         )}
+                      </div>
+                    </button>
+                 );
+              })}
               {events.length === 0 && <div className="text-slate-400 col-span-2 text-center py-8">No events found for this level.</div>}
             </div>
           )}
@@ -347,7 +511,7 @@ export default function AdminResultEntry() {
              </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-visible">
             <table className="w-full text-sm text-left">
               <thead className="bg-slate-50 text-slate-500 font-bold uppercase border-b">
                 <tr>
@@ -375,20 +539,15 @@ export default function AdminResultEntry() {
                       </select>
                     </td>
 
-                    {/* Participant Select */}
-                    <td className="p-4">
-                        <select 
-                          className="w-full p-2 border rounded bg-white"
-                          value={entry.student_id || ''}
-                          onChange={(e) => handleEntryChange(index, 'student_id', e.target.value)}
-                        >
-                          <option value="">Select Student...</option>
-                          {students.map(s => (
-                            <option key={s.id} value={s.id}>
-                              {s.name} (Chest: {s.chest_no})
-                            </option>
-                          ))}
-                        </select>
+                    {/* Participant Search (UPDATED) */}
+                    <td className="p-4 relative">
+                        <StudentAutocomplete 
+                          students={students}
+                          // Extract 'Sub Junior' from 'sub-junior' ID
+                          levelLabel={LEVELS.find(l => l.id === selectedLevel)?.label || ''}
+                          value={entry.student_id}
+                          onChange={(id) => handleEntryChange(index, 'student_id', id)}
+                        />
                     </td>
 
                     {/* Grade Select */}

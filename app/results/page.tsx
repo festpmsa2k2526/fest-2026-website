@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Trophy, ChevronLeft, Table, Zap, RefreshCw, Loader2, Grid, List 
+  Trophy, ChevronLeft, Table, Zap, RefreshCw, Loader2, Grid, List, Search, X, Filter
 } from 'lucide-react';
 import { createClient } from '@/app/utils/supabase/client'; 
 
@@ -12,13 +12,12 @@ import { createClient } from '@/app/utils/supabase/client';
 // ==========================================
 
 const TEAM_STYLES: Record<string, { color: string, hex: string }> = {
-  'GR1': { color: "blue", hex: "#3b82f6" },     // Hormuz
+  'GR1': { color: "blue", hex: "#3b82f6" },    // Hormuz
   'GR2': { color: "emerald", hex: "#10b981" },  // Aden
   'GR3': { color: "red", hex: "#ef4444" },      // Zanzibar
   'GR4': { color: "amber", hex: "#f59e0b" }     // Malacca
 };
 
-// These must match the "normalized" values we create in fetchData
 const CATEGORIES = ["Sub-Junior", "Junior", "Senior", "General"];
 
 // Types
@@ -33,7 +32,7 @@ type Winner = {
 type EventCard = {
   id: string;
   eventName: string;
-  category: string; // This will now hold 'Junior', 'Senior', etc.
+  category: string;
   event_id: string;
   winners: Winner[];
 };
@@ -95,26 +94,45 @@ const ResultCard = ({ event, teams, className = "" }: { event: EventCard, teams:
 export default function ResultsPage() {
   const supabase = createClient();
   
-  // State
+  // Data State
   const [teams, setTeams] = useState<any[]>([]);
   const [eventResults, setEventResults] = useState<EventCard[]>([]);
   const [breakdown, setBreakdown] = useState<any[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [loading, setLoading] = useState(true);
-  const [showAll, setShowAll] = useState(false);
+
+  // UI State
+  const [showAll, setShowAll] = useState(false); // Toggle Grid/Marquee
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   function setColourCode(teamName: string) {
     const team = teams.find(t => t.name === teamName);
     return team ? (TEAM_STYLES[team.slug]?.hex || "#9ca3af") : "#9ca3af";
   }
 
+  // --- FILTER LOGIC ---
+  const filteredEvents = useMemo(() => {
+    return eventResults.filter(event => {
+      // 1. Filter by Category
+      const categoryMatch = selectedCategory === 'All' || event.category === selectedCategory;
+      
+      // 2. Filter by Search (Name or ID)
+      const searchLower = searchQuery.toLowerCase();
+      const searchMatch = event.eventName.toLowerCase().includes(searchLower) || 
+                          event.event_id.toLowerCase().includes(searchLower);
+
+      return categoryMatch && searchMatch;
+    });
+  }, [eventResults, selectedCategory, searchQuery]);
+
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch All Data (including 'level' from events)
       const [teamsRes, eventsRes, studentsRes, resultsRes] = await Promise.all([
         supabase.from('teams').select('*'),
-        supabase.from('events').select('*'), // This fetches 'level' automatically
+        supabase.from('events').select('*'),
         supabase.from('students').select('id, name'),
         supabase.from('results').select('*').eq('published', true).order('created_at', { ascending: false })
       ]);
@@ -124,7 +142,7 @@ export default function ResultsPage() {
       if (studentsRes.error) throw studentsRes.error;
       if (resultsRes.error) throw resultsRes.error;
 
-      // 2. Lookups
+      // Processing Teams
       const teamMap: Record<string, any> = {};
       const formattedTeams = teamsRes.data.map((t: any) => {
         const style = TEAM_STYLES[t.slug] || { color: "gray", hex: "#9ca3af" };
@@ -140,28 +158,21 @@ export default function ResultsPage() {
       const studentMap: Record<string, string> = {};
       studentsRes.data.forEach((s: any) => { studentMap[s.id] = s.name; });
 
-      // 3. Process Results
+      // Processing Results
       const groupedMap: Record<string, EventCard> = {};
 
       resultsRes.data.forEach((r: any) => {
         const event = eventMap[r.event_id];
         if (!event) return;
 
-        // -------------------------------------------------------------
-        // ⚡ FIX: Use 'level' column and Normalize "Subjunior" -> "Sub-Junior"
-        // -------------------------------------------------------------
         let finalCategory = event.level || 'General';
-        
-        // Normalize specific mismatch if DB has "Subjunior" but UI needs "Sub-Junior"
-        if (finalCategory.toLowerCase() === 'subjunior') {
-            finalCategory = 'Sub-Junior';
-        }
+        if (finalCategory.toLowerCase() === 'subjunior') finalCategory = 'Sub-Junior';
 
         if (!groupedMap[event.id]) {
           groupedMap[event.id] = {
             id: event.id,
             eventName: event.name,
-            category: finalCategory, // Using the normalized level here
+            category: finalCategory,
             event_id: event.event_code,
             winners: []
           };
@@ -183,7 +194,6 @@ export default function ResultsPage() {
         });
       });
 
-      // Sort winners by position
       Object.values(groupedMap).forEach(card => {
         card.winners.sort((a, b) => (a.pos || 99) - (b.pos || 99));
       });
@@ -204,28 +214,20 @@ export default function ResultsPage() {
   const calculateStats = (currentTeams: any[], currentEvents: EventCard[]) => {
     const stats: Record<string, Record<string, number>> = {};
     
-    // Initialize
     currentTeams.forEach(team => {
       stats[team.id] = { total: 0 };
       CATEGORIES.forEach(cat => stats[team.id][cat] = 0);
     });
 
-    // Sum Points
     currentEvents.forEach(event => {
-      // event.category now holds "Junior", "Senior", "Sub-Junior" etc.
       const cat = event.category || 'General';
-      
       event.winners.forEach(winner => {
         const tid = winner.teamId;
-        // Check if team exists AND if the category is valid in our stats object
-        if (tid && stats[tid] && stats[tid].hasOwnProperty(cat)) {
-           stats[tid][cat] = (stats[tid][cat] || 0) + winner.points;
+        if (tid && stats[tid]) {
+           if (stats[tid].hasOwnProperty(cat)) {
+             stats[tid][cat] = (stats[tid][cat] || 0) + winner.points;
+           }
            stats[tid].total += winner.points;
-        } else if (tid && stats[tid]) {
-           // Fallback: If category string doesn't match perfectly, add to total only
-           // or dump into 'General' if you prefer
-           stats[tid].total += winner.points;
-           // console.warn(`Category mismatch: '${cat}' not found in stats keys.`);
         }
       });
     });
@@ -327,50 +329,81 @@ export default function ResultsPage() {
 
           {/* 2. LIVE RESULTS FEED */}
           <section className="pb-20">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
                  <h2 className="text-2xl font-bold flex items-center gap-2 text-[#0033A0]">
                      <Zap className="w-6 h-6 text-yellow-500" /> Live Results Feed
                  </h2>
-                 
-                 {/* VIEW TOGGLE BUTTON */}
-                 {eventResults.length > 0 && (
-                   <button 
-                     onClick={() => setShowAll(!showAll)}
-                     className="flex items-center gap-2 text-sm font-bold text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg transition-colors border border-blue-200 hover:border-blue-300"
-                   >
-                     {showAll ? (
-                        <>
-                          <List className="w-4 h-4" /> Hide All Results
-                        </>
-                     ) : (
-                        <>
-                          <Grid className="w-4 h-4" /> Show All Results
-                        </>
-                     )}
-                   </button>
-                 )}
+
+                 {/* CONTROLS (Filter & Search) */}
+                 <div className="flex flex-wrap items-center gap-3">
+                    {/* Search Bar */}
+                    <div className="relative group">
+                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-blue-500" />
+                       <input 
+                         type="text" 
+                         placeholder="Search events..." 
+                         value={searchQuery}
+                         onChange={(e) => setSearchQuery(e.target.value)}
+                         className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-48 md:w-64 transition-all"
+                       />
+                       {searchQuery && (
+                         <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500">
+                           <X className="w-3 h-3" />
+                         </button>
+                       )}
+                    </div>
+
+                    {/* View Toggle */}
+                    <button 
+                      onClick={() => setShowAll(!showAll)}
+                      className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:bg-slate-100 px-4 py-2 rounded-lg transition-colors border border-gray-200 bg-white"
+                      title="Toggle View Mode"
+                    >
+                      {showAll ? <List className="w-4 h-4" /> : <Grid className="w-4 h-4" />}
+                      <span className="hidden sm:inline">{showAll ? "Grid View" : "Scroll View"}</span>
+                    </button>
+                 </div>
+              </div>
+
+              {/* CATEGORY TABS */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                  <button 
+                    onClick={() => setSelectedCategory('All')}
+                    className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${selectedCategory === 'All' ? 'bg-[#0033A0] text-white border-[#0033A0]' : 'bg-white text-slate-600 border-gray-200 hover:border-blue-300'}`}
+                  >
+                    All Categories
+                  </button>
+                  {CATEGORIES.map(cat => (
+                    <button 
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${selectedCategory === cat ? 'bg-[#0033A0] text-white border-[#0033A0]' : 'bg-white text-slate-600 border-gray-200 hover:border-blue-300'}`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
               </div>
               
-              <div className="w-full relative">
-                   {/* Gradient Edges (Only in Marquee Mode) */}
-                   {!showAll && eventResults.length > 0 && (
+              <div className="w-full relative min-h-[300px]">
+                   {/* Gradient Edges (Only in Marquee Mode & if No Search/Filter is active) */}
+                   {!showAll && searchQuery === '' && selectedCategory === 'All' && filteredEvents.length > 0 && (
                      <>
                        <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none"></div>
                        <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none"></div>
                      </>
                    )}
                    
-                   {eventResults.length > 0 ? (
+                   {filteredEvents.length > 0 ? (
                      <>
-                       {showAll ? (
-                         // MODE A: GRID VIEW (STATIC, ALL CARDS)
+                       {showAll || searchQuery !== '' || selectedCategory !== 'All' ? (
+                         // MODE A: GRID VIEW (Used for Static View OR when searching/filtering)
                          <motion.div 
                            initial={{ opacity: 0, y: 20 }}
                            animate={{ opacity: 1, y: 0 }}
                            transition={{ duration: 0.3 }}
                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                          >
-                            {eventResults.map((event, i) => (
+                            {filteredEvents.map((event, i) => (
                                <ResultCard 
                                   key={`${event.id}-${i}`} 
                                   event={event} 
@@ -380,19 +413,19 @@ export default function ResultsPage() {
                             ))}
                          </motion.div>
                        ) : (
-                         // MODE B: MARQUEE VIEW (INFINITE SCROLL)
+                         // MODE B: MARQUEE VIEW (Only when viewing ALL)
                          <div className="overflow-hidden">
                            <motion.div 
                              className="flex gap-6 py-4"
                              animate={{ x: ["0%", "-100%"] }}
                              transition={{ 
-                               duration: Math.max(30, eventResults.length * 8), 
+                               duration: Math.max(30, filteredEvents.length * 8), 
                                ease: "linear", 
                                repeat: Infinity 
                              }}
                              whileHover={{ animationPlayState: "paused" }}
                            >
-                               {[...eventResults, ...eventResults, ...eventResults].map((event, i) => (
+                               {[...filteredEvents, ...filteredEvents, ...filteredEvents].map((event, i) => (
                                    <ResultCard 
                                       key={`${event.id}-${i}`} 
                                       event={event} 
@@ -405,9 +438,18 @@ export default function ResultsPage() {
                        )}
                      </>
                    ) : (
-                     <div className="flex flex-col items-center justify-center py-12 text-gray-400 border-2 border-dashed border-gray-200 rounded-2xl bg-white">
-                        <Trophy className="w-8 h-8 mb-2 opacity-20" />
-                        <p>No results have been published yet.</p>
+                     <div className="flex flex-col items-center justify-center py-20 text-gray-400 border-2 border-dashed border-gray-200 rounded-2xl bg-white">
+                        <Filter className="w-10 h-10 mb-3 opacity-20 text-blue-500" />
+                        <p className="font-medium text-gray-500">No results found.</p>
+                        <p className="text-xs mt-1">Try adjusting your search or filters.</p>
+                        {(searchQuery || selectedCategory !== 'All') && (
+                          <button 
+                            onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}
+                            className="mt-4 text-xs font-bold text-blue-600 hover:underline"
+                          >
+                            Clear Filters
+                          </button>
+                        )}
                      </div>
                    )}
               </div>
