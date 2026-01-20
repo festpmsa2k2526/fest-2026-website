@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@/app/utils/supabase/client'; // Check this path matches your project
+import { useRouter } from 'next/navigation'; // <--- ADDED THIS
+import { createClient } from '@/app/utils/supabase/client'; 
 import { 
-  Trophy, ChevronRight, Save, Plus, Trash2, CheckCircle, AlertCircle
+  Trophy, ChevronRight, Save, Plus, Trash2, CheckCircle, AlertCircle, Loader2 // <--- ADDED Loader2
 } from 'lucide-react';
 
 // ==========================================
@@ -36,7 +37,11 @@ type WinnerEntry = {
 
 export default function AdminResultEntry() {
   const supabase = createClient();
+  const router = useRouter(); // <--- Initialize Router
   
+  // 🔒 AUTH STATE
+  const [isAuthorized, setIsAuthorized] = useState(false); // <--- State to track if user is allowed
+
   // Steps: 0=Level, 1=Event, 2=Category, 3=Winners
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -56,9 +61,29 @@ export default function AdminResultEntry() {
   ]);
 
   // ==========================================
+  // 🔒 AUTH CHECK (NEW CODE)
+  // ==========================================
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        // Not logged in? Redirect to login page
+        router.push('/login');
+      } else {
+        // Logged in? Grant access
+        setIsAuthorized(true);
+      }
+    };
+    checkUser();
+  }, [router, supabase]);
+
+  // ==========================================
   // 🔄 DATA FETCHING
   // ==========================================
   useEffect(() => {
+    // Only fetch data if authorized
+    if (!isAuthorized) return; 
+
     const fetchBaseData = async () => {
       // 1. Fetch Students (Using 'chest_no' based on your CSV)
       const { data: stuData } = await supabase
@@ -75,7 +100,7 @@ export default function AdminResultEntry() {
       if (teamData) setTeams(teamData);
     };
     fetchBaseData();
-  }, []);
+  }, [isAuthorized]); // Depend on isAuthorized
 
   // Fetch events when Level changes
   useEffect(() => {
@@ -197,7 +222,19 @@ export default function AdminResultEntry() {
   };
 
   // ==========================================
-  // 🖥️ UI RENDER
+  // 🚫 BLOCK UNAUTHORIZED ACCESS
+  // ==========================================
+  if (!isAuthorized) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-slate-50 flex-col gap-4 text-slate-400">
+        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+        <p className="text-sm font-medium animate-pulse">Verifying Admin Access...</p>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // 🖥️ UI RENDER (Only Shows if Authorized)
   // ==========================================
 
   return (
@@ -276,25 +313,25 @@ export default function AdminResultEntry() {
            <h2 className="text-xl font-bold">Confirm Category for <span className="text-blue-600">{selectedEvent?.name}</span></h2>
            
            <div className="grid grid-cols-3 gap-6">
-              {['A', 'B', 'C'].map((cat) => (
-                <button
-                  key={cat}
-                  // @ts-ignore
-                  onClick={() => { setSelectedCategory(cat); setStep(3); }}
-                  className={`p-6 border-2 rounded-xl transition-all text-center relative overflow-hidden ${selectedCategory === cat ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-200' : 'border-slate-200 bg-white hover:border-blue-300'}`}
-                >
-                  <div className="text-4xl font-black text-slate-200 absolute -top-2 -right-2 opacity-50">{cat}</div>
-                  <div className="text-2xl font-bold text-slate-800 mb-2">Category {cat}</div>
-                  <div className="text-xs text-slate-500 space-y-1 font-mono">
-                    {/* @ts-ignore */}
-                    <div>1st: {POINT_SYSTEM[cat][1]} pts</div>
-                    {/* @ts-ignore */}
-                    <div>2nd: {POINT_SYSTEM[cat][2]} pts</div>
-                    {/* @ts-ignore */}
-                    <div>3rd: {POINT_SYSTEM[cat][3]} pts</div>
-                  </div>
-                </button>
-              ))}
+             {['A', 'B', 'C'].map((cat) => (
+               <button
+                 key={cat}
+                 // @ts-ignore
+                 onClick={() => { setSelectedCategory(cat); setStep(3); }}
+                 className={`p-6 border-2 rounded-xl transition-all text-center relative overflow-hidden ${selectedCategory === cat ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-200' : 'border-slate-200 bg-white hover:border-blue-300'}`}
+               >
+                 <div className="text-4xl font-black text-slate-200 absolute -top-2 -right-2 opacity-50">{cat}</div>
+                 <div className="text-2xl font-bold text-slate-800 mb-2">Category {cat}</div>
+                 <div className="text-xs text-slate-500 space-y-1 font-mono">
+                   {/* @ts-ignore */}
+                   <div>1st: {POINT_SYSTEM[cat][1]} pts</div>
+                   {/* @ts-ignore */}
+                   <div>2nd: {POINT_SYSTEM[cat][2]} pts</div>
+                   {/* @ts-ignore */}
+                   <div>3rd: {POINT_SYSTEM[cat][3]} pts</div>
+                 </div>
+               </button>
+             ))}
            </div>
         </div>
       )}
