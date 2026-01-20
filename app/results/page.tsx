@@ -245,7 +245,7 @@ export default function ResultsPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      <header className="bg-[#0033A0] text-white pt-24 pb-12 relative overflow-hidden">
+      <header className="bg-[#0033A0] text-white pt-8 pb-12 relative overflow-hidden">
          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
          <div className="container mx-auto px-6 relative z-10">
              <a href="/" className="inline-flex items-center gap-2 text-blue-200 hover:text-white mb-6 text-sm font-bold uppercase tracking-widest"><ChevronLeft className="w-4 h-4" /> Back to Home</a>
@@ -262,7 +262,7 @@ export default function ResultsPage() {
          </div>
       </header>
 
-      <div className="container mx-auto px-6 py-12 space-y-16">
+      <div className=" px-6 py-12 space-y-16">
           <section>
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-[#0033A0]"><Table className="w-6 h-6" /> Category Breakdown</h2>
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
