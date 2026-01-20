@@ -18,8 +18,7 @@ import { createClient } from '@/app/utils/supabase/client';
 
 // --- CONFIGURATION ---
 const LIVE_UPDATES = [
-  "📢 Inaguration Ceremony Starting Soon.",
-  "🏆  Team Zanzibar Is Leading With 131 Points",
+  "🏆  Team Malaca Is Leading With 270 Points",
   "📍 Results Published - Check Leaderboard.",
   "✨ 'Huwa Allah' - Recognition to Expression.",
   "⚡️ Schedule Released."
