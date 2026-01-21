@@ -10,14 +10,14 @@ const geistSans = Geist({
 
 // Configure the local font with your specific file and variable name
 const stapelBold = localFont({
-  src: "./fonts/stapel-bold.otf", // Updated filename
+  src: "./fonts/stapel-bold.ttf", // Updated filename
   variable: "--font-bold-font",
   // weight: "700",
 });
 const stapelRegular = localFont({
-  src: "./fonts/stapel-regular.otf", 
+  src: "./fonts/stapel-regular.ttf", 
   variable: "--font-regular-font",
-  weight: "400",
+  // weight: "400",
 });
 
 const amiri = Amiri({

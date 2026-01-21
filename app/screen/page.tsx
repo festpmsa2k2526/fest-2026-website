@@ -95,7 +95,7 @@ export default function StagePage() {
           >
             {/* Ensure this image exists in your public folder */}
             <img
-              src="/Logo_White.png"
+              src="/logo_text.png"
               alt="QUL Logo"
               className="w-full h-full object-contain"
             />
