@@ -92,7 +92,7 @@ export default function StagePage() {
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
             className="w-[65vw]"
-            // drop-shadow-[0_0_80px_rgba(255,255,255,0.3)]
+          // drop-shadow-[0_0_80px_rgba(255,255,255,0.3)]
           >
             {/* Ensure this image exists in your public folder */}
             <img
@@ -111,10 +111,10 @@ export default function StagePage() {
           className="text-center z-20 fixed bottom-[10dvh] text-white px-4"
         >
           <h1 className="text-5xl font-montserat font-bold uppercase mb-2 text-white">
-            SPEECH ARABIC
-          </h1>
+
+            CLOSING CESREMONY          </h1>
           <p className="text-4xl font-montserat uppercase text-white">
-            JUNIOR
+            SENIOR
           </p>
         </motion.div>
       </div>
