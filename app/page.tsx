@@ -18,10 +18,10 @@ import { createClient } from '@/app/utils/supabase/client';
 
 // --- CONFIGURATION ---
 const LIVE_UPDATES = [
-  "🏆  Team Malaca Is Leading With 270 Points",
-  "📍 Results Published - Check Leaderboard.",
-  "✨ 'Huwa Allah' - Recognition to Expression.",
-  "⚡️ Schedule Released."
+  "🏆 Aden Is leading With 292 Points.",
+  "📍 Results Updated - Check Leaderboard.",
+  "✨ Grand Finale Highlight Events : Mashup - Skit - Debate (Senior).",
+  "⚡️'QUL' Is About To End,Point Table Is Getting Fire."
 ];
 
 // Committee List (Static for now)
@@ -199,7 +199,7 @@ const LiveDashboard = ({ teamData, loading }: { teamData: any[], loading: boolea
 
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay"></div>
       <div className="absolute inset-0 opacity-10"
-        style={{ backgroundImage: 'linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)', backgroundSize: '50px 50px' }}>
+        style={{ backgroundImage: 'linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #f`fffff 1px, transparent 1px)', backgroundSize: '50px 50px' }}>
       </div>
 
       <div className="container mx-auto px-6 relative z-10 pt-12">
@@ -213,7 +213,7 @@ const LiveDashboard = ({ teamData, loading }: { teamData: any[], loading: boolea
             <span className="text-xs font-medium tracking-widest uppercase">Live Arena</span>
           </motion.div>
           <h2 className="text-4xl md:text-6xl font-bold mb-4">Team Standing</h2>
-          <p className="text-blue-200 max-w-xl mx-auto">The stage is ready. Four groups compete for the championship title.</p>
+          <p className="text-blue-200 max-w-xl mx-auto">Lastday updates.</p>
         </div>
 
         {/* Group Cards */}
@@ -288,7 +288,7 @@ const LiveDashboard = ({ teamData, loading }: { teamData: any[], loading: boolea
               <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
                 <Calendar className="w-6 h-6" /> Live Schedule
               </h3>
-              <p className="text-gray-600">Off-stage events concluding. On-stage events are started.</p>
+              <p className="text-gray-600">"Qul" is about to end.</p>
             </div>
             <div className="flex gap-4">
               <div className="text-center px-6 py-4 bg-blue-50 rounded-xl">
@@ -296,7 +296,7 @@ const LiveDashboard = ({ teamData, loading }: { teamData: any[], loading: boolea
                 <div className="text-xs uppercase font-bold text-gray-400">Jan</div>
               </div>
               <div className="text-center px-6 py-4 bg-blue-50 rounded-xl border-l-4 border-yellow-400">
-                <div className="text-3xl font-bold">22</div>
+                <div className="text-3xl font-bold">21</div>
                 <div className="text-xs uppercase font-bold text-gray-400">Jan</div>
               </div>
             </div>
