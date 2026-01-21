@@ -111,7 +111,7 @@ export default function StagePage() {
           className="text-center z-20 fixed bottom-[10dvh] text-white px-4"
         >
           <h1 className="text-7xl font-montserat font-bold uppercase mb-2 text-white">
-            SONG MALAYALAM
+            SPEECH MALAYALAM
           </h1>
           <p className="text-4xl font-montserat uppercase text-white">
             SENIOR
