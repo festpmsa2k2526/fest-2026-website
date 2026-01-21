@@ -110,10 +110,10 @@ export default function StagePage() {
           className="text-center z-20 fixed bottom-[10dvh] text-white px-4"
         >
           <h2 className="text-4xl font-stapel tracking-[0.5em] uppercase mb-4 text-blue-100/90">
-            QIRAATH
+            SPEECH MALAYALAM
           </h2>
           <p className="text-4xl font-stapell tracking-widest uppercase text-blue-200/60">
-            SENIOR
+            JUNIOR
           </p>
         </motion.div>
       </div>
