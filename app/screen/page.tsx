@@ -46,8 +46,8 @@ export default function StagePage() {
 
       {/* 2. Animated Elements (Asterisks) */}
       <div className="absolute inset-0 w-full h-full flex items-center justify-between pointer-events-none z-10">
-        <div className="absolute left-[-10vh] top-1/2 -translate-y-1/2">
-          <SpinningAsterisk className="w-[100vh] h-[100vh] text-blue-300/10" />
+        <div className="absolute left-[-50vh] top-1/2 -translate-y-1/2">
+          <SpinningAsterisk className="w-[140vh] h-[140vh] text-blue-300/10" />
         </div>
         <div className="absolute right-[5vw] top-[10vh]">
           <SpinningAsterisk className="w-[30vh] h-[30vh] text-blue-300/10" />
