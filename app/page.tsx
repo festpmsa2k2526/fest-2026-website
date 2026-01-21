@@ -318,6 +318,84 @@ const LiveDashboard = ({ teamData, loading }: { teamData: any[], loading: boolea
   );
 };
 
+// --- NEW: ABOUT SECTION WITH PARALLAX ---
+const AboutSection = () => {
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"]
+  });
+
+  // Parallax transforms
+  const yCol1 = useTransform(scrollYProgress, [0, 1], [100, -100]); // Moves slower
+  const yCol2 = useTransform(scrollYProgress, [0, 1], [200, -200]); // Moves faster
+  const bgRotate = useTransform(scrollYProgress, [0, 1], [0, 45]);
+
+  return (
+    <section ref={containerRef} className="relative py-32 bg-white text-slate-900 overflow-hidden">
+      {/* Dynamic Background Elements */}
+      <motion.div style={{ rotate: bgRotate }} className="absolute -top-1/4 -right-1/4 w-[800px] h-[800px] bg-blue-50/50 rounded-[3rem] -z-10 blur-3xl" />
+      <motion.div style={{ rotate: bgRotate, scale: 1.2 }} className="absolute bottom-0 -left-1/4 w-[600px] h-[600px] bg-yellow-50/50 rounded-full -z-10 blur-3xl" />
+
+      <div className="container mx-auto px-6 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="max-w-4xl mx-auto mb-24 text-center"
+        >
+          <div className="inline-block mb-6">
+             <SpinningAsterisk className="w-12 h-12 text-[#0033A0]" />
+          </div>
+          <h2 className="text-4xl md:text-6xl font-black mb-6 text-[#0033A0] leading-tight tracking-tight">
+            Where Talent Meets <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0033A0] to-blue-500">Purpose</span>
+          </h2>
+          <div className="h-1.5 w-32 bg-yellow-400 mx-auto rounded-full"></div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start max-w-6xl mx-auto">
+           {/* Column 1 - Parallax Effect */}
+           <motion.div style={{ y: yCol1 }} className="relative">
+             <div className="absolute -left-8 -top-8 w-24 h-24 bg-blue-100 rounded-full -z-10 opacity-30 blur-xl"></div>
+             <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8 }}
+                viewport={{ once: true }}
+             >
+                <h3 className="text-2xl font-bold mb-6 text-slate-800 flex items-center gap-3">
+                  <span className="w-8 h-1 bg-[#0033A0]"></span> The Heart of Campus
+                </h3>
+                <p className="text-lg md:text-xl text-slate-600 leading-relaxed text-justify font-light">
+                  "PMSA Wafy College Kattilangadi, a prestigious institution blending spiritual and secular education, presents the <b className="text-[#0033A0]">QUL '26 Arts Fest</b>, hosted by the Munthajul Afnan Student's Association (MASA). More than just a student union, MASA serves as the vibrant heartbeat of campus life, empowering students to lead with moral integrity and creative vision. This annual arts festival is their flagship event, a testament to the community's dedication to nurturing holistic excellence and providing a stage where talent meets purpose."
+                </p>
+             </motion.div>
+           </motion.div>
+
+           {/* Column 2 - Faster Parallax Effect */}
+           <motion.div style={{ y: yCol2 }} className="relative pt-12 md:pt-0">
+             <div className="absolute -right-8 -top-8 w-32 h-32 bg-yellow-100 rounded-full -z-10 opacity-30 blur-xl"></div>
+             <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                viewport={{ once: true }}
+             >
+                <h3 className="text-2xl font-bold mb-6 text-slate-800 flex items-center gap-3 md:justify-end">
+                  Recognition to Expression <span className="w-8 h-1 bg-yellow-400"></span>
+                </h3>
+                <p className="text-lg md:text-xl text-slate-600 leading-relaxed text-justify font-light">
+                  "This year's theme, <b className="text-[#0033A0]">'Huwa Allah: Recognition to Expression,'</b> invites participants on a profound journey that begins with recognizing the Creator and flows into sincere artistic expression. Inspired by the command <i>'Qul'</i> (Say), the fest challenges students to transform their art into a medium of truth and responsibility. Across four competing groups and over 80 events spanning three days, QUL '26 celebrates the harmonious convergence of faith, intellect, and creativity."
+                </p>
+             </motion.div>
+           </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // --- STATIC SECTIONS (Unchanged) ---
 
 const ZoomHero = () => {
@@ -528,7 +606,7 @@ const Footer = () => (
       <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-white/5 text-xs text-gray-600">
         <p>© 2026 PMSA Wafy College. All rights reserved.</p>
         <div className="flex items-center gap-2 mt-4 md:mt-0">
-          <span>Designed with</span><span className="text-red-500">❤</span><span>by SINAN AK</span>
+          <span>Designed with</span><span className="text-red-500">❤</span><span>by Salih KC & SINAN AK</span>
         </div>
       </div>
     </div>
@@ -624,6 +702,8 @@ export default function App() {
     <main className="min-h-screen bg-slate-50 font-sans selection:bg-[#0033A0] selection:text-white overflow-x-hidden">
       <NoiseOverlay />
       <ZoomHero />
+      {/* Newly Added About Section */}
+      <AboutSection />
       <ThemeManifesto />
       {/* Pass dynamic data as props */}
       <HighlightsGallery images={highlightImages} />
