@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Amiri, Questrial } from "next/font/google";
+import { Geist, Amiri, Questrial, Montserrat } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -10,6 +10,11 @@ const geistSans = Geist({
 const questrialSans = Geist({
   variable: "--font-questrial-sans",
   subsets: ["latin"],
+});
+const MontserratSans = Geist({
+  variable: "--font-montserrat-sans",
+  subsets: ["latin"],
+  weight: ["400", "700"],
 });
 
 // Configure the local font with your specific file and variable name
@@ -43,7 +48,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${questrialSans.variable} ${amiri.variable} ${stapelBold.variable} ${stapelRegular.variable} antialiased selection:bg-white selection:text-pmsa-blue`}
+        className={`${geistSans.variable} ${MontserratSans.variable} ${amiri.variable} ${stapelBold.variable} ${stapelRegular.variable} antialiased selection:bg-white selection:text-pmsa-blue`}
       >
         {children}
       </body>

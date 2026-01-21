@@ -26,12 +26,12 @@ const SpinningAsterisk = ({ className }: { className: string }) => (
 
 export default function StagePage() {
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-[#0033A0] selection:bg-transparent">
+    <main className="relative w-screen h-screen overflow-hidden bg-[#1c30a9] selection:bg-transparent">
       {/* 1. Background Layers */}
       {/* <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#1e40af_0%,#0033A0_100%)]"></div> */}
 
       {/* Noise Overlay */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay">
+      {/* <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay">
         <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
           <filter id="noiseFilter">
             <feTurbulence
@@ -42,7 +42,7 @@ export default function StagePage() {
           </filter>
           <rect width="100%" height="100%" filter="url(#noiseFilter)" />
         </svg>
-      </div>
+      </div> */}
 
       {/* 2. Animated Elements (Asterisks) */}
       <div className="absolute inset-0 w-full h-full flex items-center justify-between pointer-events-none z-10">
@@ -62,7 +62,7 @@ export default function StagePage() {
           opacity: [0.3, 0.5, 0.3],
         }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/4 left-1/4 w-[30vw] h-[30vw] bg-blue-400 rounded-full mix-blend-screen filter blur-[150px] opacity-30"
+        className="absolute top-1/4 left-1/4 w-[30vw] h-[30vw] bg-[#1c30a9] rounded-full mix-blend-screen filter blur-[150px] opacity-30"
       />
       <motion.div
         animate={{
@@ -91,7 +91,8 @@ export default function StagePage() {
           <motion.div
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            className="w-[60vw] md:w-[60vw] drop-shadow-[0_0_80px_rgba(255,255,255,0.3)]"
+            className="w-[65vw]"
+            // drop-shadow-[0_0_80px_rgba(255,255,255,0.3)]
           >
             {/* Ensure this image exists in your public folder */}
             <img
@@ -109,10 +110,10 @@ export default function StagePage() {
           transition={{ delay: 0.5, duration: 1 }}
           className="text-center z-20 fixed bottom-[10dvh] text-white px-4"
         >
-          <h1 className="text-6xl font-questrial uppercase mb-2 text-blue-100/90">
+          <h1 className="text-5xl font-montserat font-bold uppercase mb-2 text-white">
             SPEECH ARABIC
           </h1>
-          <p className="text-4xl font-questrial uppercase text-blue-200/60">
+          <p className="text-4xl font-montserat uppercase text-white">
             JUNIOR
           </p>
         </motion.div>
