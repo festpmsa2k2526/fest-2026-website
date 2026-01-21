@@ -110,7 +110,7 @@ export default function StagePage() {
           className="text-center z-20 fixed bottom-[10dvh] text-white px-4"
         >
           <h1 className="text-6xl font-questrial uppercase mb-2 text-blue-100/90">
-            TED X
+            SPEECH ARABIC
           </h1>
           <p className="text-4xl font-questrial uppercase text-blue-200/60">
             SUB JUNIOR
