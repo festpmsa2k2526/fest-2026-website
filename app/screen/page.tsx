@@ -110,11 +110,11 @@ export default function StagePage() {
           transition={{ delay: 0.5, duration: 1 }}
           className="text-center z-20 fixed bottom-[10dvh] text-white px-4"
         >
-          <h1 className="text-5xl font-montserat font-bold uppercase mb-2 text-white">
-            SPEECH ARABIC
+          <h1 className="text-6xl font-montserat font-bold uppercase mb-2 text-white">
+            TED X
           </h1>
           <p className="text-4xl font-montserat uppercase text-white">
-            JUNIOR
+            GENERAL
           </p>
         </motion.div>
       </div>
