@@ -26,9 +26,9 @@ const SpinningAsterisk = ({ className }: { className: string }) => (
 
 export default function StagePage() {
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-[#0033A0] cursor-none selection:bg-transparent">
+    <main className="relative w-screen h-screen overflow-hidden bg-[#0033A0] selection:bg-transparent">
       {/* 1. Background Layers */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#1e40af_0%,#0033A0_100%)]"></div>
+      {/* <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#1e40af_0%,#0033A0_100%)]"></div> */}
 
       {/* Noise Overlay */}
       <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay">
@@ -91,7 +91,7 @@ export default function StagePage() {
           <motion.div
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            className="w-[50vw] md:w-[50vw] drop-shadow-[0_0_80px_rgba(255,255,255,0.3)]"
+            className="w-[60vw] md:w-[60vw] drop-shadow-[0_0_80px_rgba(255,255,255,0.3)]"
           >
             {/* Ensure this image exists in your public folder */}
             <img
@@ -109,9 +109,9 @@ export default function StagePage() {
           transition={{ delay: 0.5, duration: 1 }}
           className="text-center z-20 fixed bottom-[10dvh] text-white px-4"
         >
-          <h2 className="text-4xl font-stapel tracking-[0.5em] uppercase mb-4 text-blue-100/90">
+          <h1 className="text-4xl font-stapel tracking-[0.5em] uppercase mb-4 text-blue-100/90">
             SPEECH MALAYALAM
-          </h2>
+          </h1>
           <p className="text-4xl font-stapell tracking-widest uppercase text-blue-200/60">
             JUNIOR
           </p>

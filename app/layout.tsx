@@ -12,10 +12,12 @@ const geistSans = Geist({
 const stapelBold = localFont({
   src: "./fonts/stapel-bold.otf", // Updated filename
   variable: "--font-bold-font",
+  // weight: "700",
 });
 const stapelRegular = localFont({
-  src: "./fonts/stapel-regular.otf", // Updated filename
+  src: "./fonts/stapel-regular.otf", 
   variable: "--font-regular-font",
+  weight: "400",
 });
 
 const amiri = Amiri({

@@ -1,13 +1,18 @@
 @import "tailwindcss";
 
+
+
+
 @theme {
   --font-sans: var(--font-geist-sans);
   --font-arabic: var(--font-amiri);
-  
-  --color-pmsa-blue: #0020b0; 
+  --font-stapel: var(--font-bold-font);
+  --font-stapell: var(--font-regular-font);
+
+  --color-pmsa-blue: #0020b0;
   --color-pmsa-dark: #00126b;
   --color-pmsa-accent: #ffffff;
-  
+
   --animate-spin-slow: spin 120s linear infinite;
   --animate-grain: grain 8s steps(10) infinite;
 }
@@ -56,15 +61,18 @@ body {
 }
 
 .embla__slide {
-  flex: 0 0 70%; /* Shows a bit of the next slide */
+  flex: 0 0 70%;
+  /* Shows a bit of the next slide */
   min-width: 0;
   position: relative;
-  margin-right: 20px; /* Gap between slides */
+  margin-right: 20px;
+  /* Gap between slides */
 }
 
 /* The "Mask" that hides the overflowing image */
 .embla__parallax {
-  height: 25rem; /* Adjust height here */
+  height: 25rem;
+  /* Adjust height here */
   border-radius: 1.5rem;
   overflow: hidden;
   position: relative;
@@ -75,8 +83,10 @@ body {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: -20%; /* Crucial: Make image wider than container */
-  width: 140%; /* Crucial: Make image wider than container */
+  left: -20%;
+  /* Crucial: Make image wider than container */
+  width: 140%;
+  /* Crucial: Make image wider than container */
   display: flex;
   justify-content: center;
 }
