@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Amiri } from "next/font/google";
+import { Geist, Amiri, Questrial } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+const questrialSans = Geist({
+  variable: "--font-questrial-sans",
   subsets: ["latin"],
 });
 
@@ -39,7 +43,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${amiri.variable} ${stapelBold.variable} ${stapelRegular.variable} antialiased selection:bg-white selection:text-pmsa-blue`}
+        className={`${geistSans.variable} ${questrialSans.variable} ${amiri.variable} ${stapelBold.variable} ${stapelRegular.variable} antialiased selection:bg-white selection:text-pmsa-blue`}
       >
         {children}
       </body>
