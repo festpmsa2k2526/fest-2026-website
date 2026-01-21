@@ -367,8 +367,11 @@ export default function TVDisplayPage() {
         <div className="w-[38%] max-w-[500px] shrink-0 h-full flex flex-col">
           <div className="bg-white rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.3)] overflow-hidden h-full border border-white/10 relative p-2">
             {/* Scale the content slightly to fit nicely */}
-            <div className="w-full h-full origin-top">
+            <div className="w-full h-[80%] origin-top">
               <ScoreTable data={breakdown} loading={loading} />
+            </div>
+            <div className='text-[10px]  text-red-500 w-full h-[18%] mt-auto mb-0 pt-auto bottom-0 text-center'>
+              <p>minus marks are not calculated in this table</p>
             </div>
           </div>
         </div>
