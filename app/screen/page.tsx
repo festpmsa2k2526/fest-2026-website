@@ -113,7 +113,7 @@ export default function StagePage() {
             SPEECH ARABIC
           </h1>
           <p className="text-4xl font-questrial uppercase text-blue-200/60">
-            SUB JUNIOR
+            JUNIOR
           </p>
         </motion.div>
       </div>
