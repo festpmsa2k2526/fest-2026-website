@@ -1,10 +1,21 @@
 import type { Metadata } from "next";
 import { Geist, Amiri } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+});
+
+// Configure the local font with your specific file and variable name
+const stapelBold = localFont({
+  src: "./fonts/stapel-bold.otf", // Updated filename
+  variable: "--font-bold-font",
+});
+const stapelRegular = localFont({
+  src: "./fonts/stapel-regular.otf", // Updated filename
+  variable: "--font-regular-font",
 });
 
 const amiri = Amiri({
@@ -25,7 +36,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${amiri.variable} antialiased selection:bg-white selection:text-pmsa-blue`}>
+      <body
+        className={`${geistSans.variable} ${amiri.variable} ${stapelBold.variable} ${stapelRegular.variable} antialiased selection:bg-white selection:text-pmsa-blue`}
+      >
         {children}
       </body>
     </html>
