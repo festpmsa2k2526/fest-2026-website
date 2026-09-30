@@ -8,7 +8,9 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: false, autoRefreshToken: false }
 });
 
-export const revalidate = 5; // Cache for 5 seconds for faster TV response
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 export async function GET() {
   try {
@@ -208,6 +210,12 @@ export async function GET() {
       breakdown: categoryBreakdown,
       broadcast: broadcastState,
       lastUpdated: new Date().toISOString()
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
+        'CDN-Cache-Control': 'no-store',
+        'Vercel-CDN-Cache-Control': 'no-store'
+      }
     });
   } catch (err: any) {
     console.error("API /api/data error:", err);
