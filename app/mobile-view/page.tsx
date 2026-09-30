@@ -1,25 +1,24 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Trophy, 
   Search, 
-  X, 
   Sparkles, 
   Radio, 
-  Shield, 
-  RefreshCw, 
+  RotateCw, 
+  Trophy, 
   Filter, 
-  ChevronUp,
-  Award,
-  Layers,
-  Zap,
-  CheckCircle2,
+  CheckCircle2, 
+  Medal, 
+  Award, 
+  ChevronRight, 
+  ShieldCheck, 
   Calendar,
-  SlidersHorizontal
+  Grid,
+  List,
+  X
 } from 'lucide-react';
-import { supabase } from '@/app/lib/supabase';
 
 // ==========================================
 // ⚙️ TYPES & INTERFACES
@@ -32,12 +31,12 @@ interface Winner {
   chest_no?: string | null;
   teamId?: string;
   teamName: string;
-  teamColor: string;
+  teamColor?: string;
   grade?: string | null;
   points: number;
 }
 
-interface EventCard {
+interface EventItem {
   id: string;
   eventName: string;
   event_code: string;
@@ -47,12 +46,18 @@ interface EventCard {
   winners: Winner[];
 }
 
-const SECTION_TABS = ["All", "Aliya", "Foundation", "General", "On Stage", "Off Stage"];
+const SECTIONS = ['All', 'Aliya', 'Foundation', 'General', 'On Stage', 'Off Stage'];
+const HOUSES = [
+  { name: 'All Houses', color: '#caa02f' },
+  { name: 'Hormuz', color: '#2563eb' },
+  { name: 'Aden', color: '#10b981' },
+  { name: 'Zanzibar', color: '#ef4444' }
+];
 
-const SAMPLE_EVENTS: EventCard[] = [
+const SAMPLE_EVENTS: EventItem[] = [
   {
     id: "sample-1",
-    eventName: "Elocution English",
+    eventName: "Elocution English (Aliya)",
     event_code: "EL-EN-01",
     category: "ON STAGE",
     section: "Aliya",
@@ -126,387 +131,344 @@ const SAMPLE_EVENTS: EventCard[] = [
   }
 ];
 
-// ==========================================
-// 📱 MOBILE RESULT CARD COMPONENT
-// ==========================================
-const MobileResultCard = ({ event }: { event: EventCard }) => {
-  const winners = event.winners || [];
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.96 }}
-      transition={{ duration: 0.25 }}
-      className="relative rounded-3xl overflow-hidden border-2 border-[#caa02f]/60 shadow-[0_8px_25px_rgba(0,0,0,0.4)] text-white"
-      style={{
-        background: 'linear-gradient(135deg, #161208 0%, #0d0a04 60%, #171207 100%)',
-      }}
-    >
-      {/* Subtle Top Golden Specular Light */}
-      <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-48 h-20 bg-[#caa02f]/20 rounded-full blur-xl pointer-events-none" />
-
-      {/* Card Header */}
-      <div className="relative z-10 px-4 pt-4 pb-3 border-b border-[#caa02f]/30">
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#caa02f]/25 border border-[#caa02f]/50 text-[#fff4d1] text-[10px] font-black uppercase tracking-wider">
-              <Sparkles className="w-2.5 h-2.5 text-[#fce8a6]" />
-              {event.section || 'General'}
-            </span>
-            <span className="px-2 py-0.5 rounded-full bg-white/10 text-slate-200 text-[10px] font-bold uppercase tracking-wider">
-              {event.category || 'Event'}
-            </span>
-          </div>
-
-          {event.event_code && (
-            <span className="font-mono text-[11px] font-black text-amber-300 bg-black/80 px-2.5 py-0.5 rounded-md border border-white/15 shadow-inner">
-              #{event.event_code}
-            </span>
-          )}
-        </div>
-
-        <h3 className="text-lg font-black text-white leading-snug tracking-tight drop-shadow-sm">
-          {event.eventName}
-        </h3>
-      </div>
-
-      {/* Winners List */}
-      <div className="p-3 space-y-2 relative z-10">
-        {winners.length === 0 ? (
-          <div className="text-center py-6 text-amber-200/50 text-xs font-medium italic">
-            Adjudication in progress...
-          </div>
-        ) : (
-          winners.map((w, idx) => {
-            const isFirst = w.pos === 1;
-            const isSecond = w.pos === 2;
-            const isThird = w.pos === 3;
-
-            return (
-              <div
-                key={idx}
-                className={`flex items-center justify-between p-2.5 rounded-2xl border transition-all ${
-                  isFirst
-                    ? 'bg-gradient-to-r from-amber-950/90 via-[#181308] to-[#120e06] border-amber-400/90 shadow-[0_0_15px_rgba(202,160,47,0.25)]'
-                    : isSecond
-                    ? 'bg-[#0f1115] border-slate-400/50 shadow-sm'
-                    : isThird
-                    ? 'bg-[#140c07] border-amber-800/50 shadow-sm'
-                    : 'bg-black/60 border-white/10'
-                }`}
-              >
-                {/* Left: Rank Badge + Name & Team */}
-                <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                  <div
-                    className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs font-mono shrink-0 shadow-md ${
-                      isFirst
-                        ? 'bg-gradient-to-br from-yellow-300 via-amber-400 to-amber-500 text-slate-950 ring-2 ring-yellow-200'
-                        : isSecond
-                        ? 'bg-gradient-to-br from-white via-slate-200 to-slate-400 text-slate-950 ring-1 ring-white/70'
-                        : isThird
-                        ? 'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-900 text-amber-100 ring-1 ring-amber-400/50'
-                        : 'bg-slate-700 text-white'
-                    }`}
-                  >
-                    {w.pos}
-                  </div>
-
-                  <div className="min-w-0">
-                    <div className="font-extrabold text-white text-[14px] truncate flex items-center gap-1.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                      <span className="truncate">{w.name}</span>
-                      {w.chest_no && (
-                        <span className="text-[10px] font-mono font-bold text-yellow-200 bg-black/80 px-1.5 py-0.2 rounded border border-amber-400/40 shrink-0">
-                          #{w.chest_no}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full inline-block shrink-0 shadow-sm ring-1 ring-white/50"
-                        style={{ backgroundColor: w.teamColor || '#caa02f' }}
-                      />
-                      <span className="text-xs font-bold text-[#fde68a] truncate tracking-wide">
-                        {w.teamName}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: Points + Grade */}
-                <div className="text-right shrink-0">
-                  <div className="font-mono font-black text-base text-yellow-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                    +{w.points}
-                    <span className="text-[10px] font-bold text-amber-200/80 uppercase ml-0.5">Pts</span>
-                  </div>
-                  {w.grade && (
-                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 inline-block mt-0.5 shadow-sm">
-                      {w.grade}
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      {/* Card Footer */}
-      <div className="px-4 py-2 border-t border-white/10 flex items-center justify-between text-[10px] text-amber-200/60 font-mono">
-        <span>AAWA ADJUDICATION</span>
-        <span className="text-[#caa02f] font-bold flex items-center gap-1">
-          <Shield className="w-3 h-3" /> OFFICIAL
-        </span>
-      </div>
-    </motion.div>
-  );
-};
-
-// ==========================================
-// 🚀 MAIN MOBILE VIEW PAGE
-// ==========================================
 export default function MobileViewPage() {
-  const [events, setEvents] = useState<EventCard[]>(SAMPLE_EVENTS);
-  const [activeTab, setActiveTab] = useState<string>("All");
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
-  const [lastRefreshed, setLastRefreshed] = useState<string>("");
+  const [events, setEvents] = useState<EventItem[]>(SAMPLE_EVENTS);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSection, setSelectedSection] = useState('All');
+  const [selectedHouse, setSelectedHouse] = useState('All Houses');
+  const [viewMode, setViewMode] = useState<'cards' | 'compact'>('cards');
+  const [isLoading, setIsLoading] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<string>('');
 
-  // 1. Fetch Real-Time Data
-  const fetchData = async () => {
+  // 1. Fetch live published event results
+  const fetchResults = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const res = await fetch('/api/data?t=' + Date.now(), { cache: 'no-store' });
       const json = await res.json();
-
       if (json.success && json.events && json.events.length > 0) {
         setEvents(json.events);
       }
-      setLastRefreshed(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-    } catch (error) {
-      console.error('Error fetching mobile results:', error);
+      setLastRefreshed(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    } catch (err) {
+      console.error('Mobile view fetch error:', err);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 15000); // 15s live refresh
-
-    // Scroll listener for top button
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
-    };
-    window.addEventListener('scroll', handleScroll);
-
-    // Supabase Realtime Listener for instant result updates
-    const channel = supabase
-      .channel('mobile_results_realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'participations' },
-        () => {
-          fetchData();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('scroll', handleScroll);
-      supabase.removeChannel(channel);
-    };
+    fetchResults();
+    const timer = setInterval(fetchResults, 15000); // 15s auto refresh
+    return () => clearInterval(timer);
   }, []);
 
-  // 2. Filter & Search Logic
+  // 2. Filter events
   const filteredEvents = useMemo(() => {
     return events.filter((ev) => {
-      // Tab matching
-      if (activeTab !== "All") {
-        const sec = (ev.section || "").toLowerCase();
-        const cat = (ev.category || "").toLowerCase();
-        const target = activeTab.toLowerCase();
-
-        if (target === "on stage" || target === "off stage") {
-          if (!cat.includes(target)) return false;
-        } else {
-          if (!sec.includes(target)) return false;
-        }
-      }
-
-      // Search matching (Event name, event code, student name, chest number, team)
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const matchTitle = ev.eventName.toLowerCase().includes(q);
-        const matchCode = ev.event_code.toLowerCase().includes(q);
-        const matchWinner = ev.winners?.some(
+      // Search filter
+      const q = searchQuery.toLowerCase().trim();
+      const matchSearch =
+        !q ||
+        ev.eventName.toLowerCase().includes(q) ||
+        (ev.event_code && ev.event_code.toLowerCase().includes(q)) ||
+        ev.winners.some(
           (w) =>
             w.name.toLowerCase().includes(q) ||
             (w.chest_no && w.chest_no.toLowerCase().includes(q)) ||
             w.teamName.toLowerCase().includes(q)
         );
 
-        if (!matchTitle && !matchCode && !matchWinner) return false;
+      // Section filter
+      let matchSection = true;
+      if (selectedSection !== 'All') {
+        if (selectedSection === 'On Stage') {
+          matchSection = ev.category?.toUpperCase().includes('ON') ?? false;
+        } else if (selectedSection === 'Off Stage') {
+          matchSection = ev.category?.toUpperCase().includes('OFF') ?? false;
+        } else {
+          matchSection =
+            ev.section?.toLowerCase().includes(selectedSection.toLowerCase()) ?? false;
+        }
       }
 
-      return true;
-    });
-  }, [events, activeTab, searchQuery]);
+      // House filter
+      let matchHouse = true;
+      if (selectedHouse !== 'All Houses') {
+        matchHouse = ev.winners.some(
+          (w) => w.teamName.toLowerCase() === selectedHouse.toLowerCase()
+        );
+      }
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+      return matchSearch && matchSection && matchHouse;
+    });
+  }, [events, searchQuery, selectedSection, selectedHouse]);
 
   return (
-    <div className="min-h-screen w-full bg-[radial-gradient(ellipse_at_top,#fffcf2_0%,#faedc8_40%,#caa02f_100%)] text-slate-900 flex flex-col font-sans select-none pb-20">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,#fffcf0_0%,#faedd0_40%,#caa02f_120%)] text-slate-900 flex flex-col font-sans pb-16">
       
-      {/* Background Dots */}
-      <div
-        className="fixed inset-0 pointer-events-none opacity-25"
-        style={{
-          backgroundImage: `radial-gradient(#b38617 1px, transparent 1px)`,
-          backgroundSize: '20px 20px',
-        }}
-      />
-
-      {/* 1. STICKY TOP HEADER */}
-      <header className="sticky top-0 z-40 bg-white/70 backdrop-blur-xl border-b border-black/10 shadow-sm px-4 pt-3.5 pb-3">
-        <div className="flex items-center justify-between gap-3">
-          {/* Logo & Branding */}
+      {/* 1. COMPACT MOBILE HEADER */}
+      <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-lg border-b border-[#caa02f]/30 px-4 py-3 shadow-xs">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img
               src="/Logo_White.png"
               alt="AAWA '26"
-              className="h-10 w-auto object-contain filter drop-shadow-sm"
+              className="h-10 w-auto object-contain filter drop-shadow-xs"
               onError={(e: any) => { e.target.style.display = 'none'; }}
             />
             <div>
               <div className="flex items-center gap-1.5">
-                <h1 className="text-lg font-black tracking-tight text-slate-950">
-                  AAWA RESULTS
-                </h1>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-base font-black tracking-tight text-slate-950">
+                  AAWA '26
+                </span>
+                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500 text-white flex items-center gap-1 shadow-xs">
+                  <Radio className="w-2.5 h-2.5 animate-pulse" /> LIVE
+                </span>
               </div>
-              <p className="text-[10px] font-black text-[#8c670b] uppercase tracking-wider">
-                Published Event Stream
+              <p className="text-[10px] font-extrabold text-[#997314] uppercase tracking-wider">
+                Official Event Results
               </p>
             </div>
           </div>
 
-          {/* Quick Refresh Button */}
-          <button
-            onClick={fetchData}
-            disabled={isLoading}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/80 active:bg-black text-[#fce8a6] text-xs font-black uppercase tracking-wider border border-white/20 shadow-md transition-all active:scale-95 disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-[#caa02f]' : ''}`} />
-            <span>{isLoading ? 'Syncing' : 'Live'}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={fetchResults}
+              disabled={isLoading}
+              className="p-2 rounded-xl bg-[#caa02f]/15 hover:bg-[#caa02f]/25 text-[#997314] active:scale-95 transition-all border border-[#caa02f]/40"
+              title="Refresh results"
+            >
+              <RotateCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            </button>
+            <button
+              onClick={() => setViewMode(viewMode === 'cards' ? 'compact' : 'cards')}
+              className="p-2 rounded-xl bg-black/5 hover:bg-black/10 text-slate-800 active:scale-95 transition-all border border-black/10"
+              title="Toggle View Mode"
+            >
+              {viewMode === 'cards' ? <List className="w-4 h-4" /> : <Grid className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
-        {/* Search Input Bar */}
+        {/* Search Bar */}
         <div className="mt-3 relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search event, student, chest #, team..."
-            className="w-full pl-10 pr-9 py-2 rounded-2xl bg-white/90 border-2 border-black/10 text-slate-950 placeholder-slate-400 font-bold text-xs focus:outline-none focus:border-[#caa02f] focus:bg-white shadow-inner transition-all"
+            placeholder="Search event, student, chest #, house..."
+            className="w-full bg-white/90 border border-[#caa02f]/40 rounded-xl pl-9 pr-8 py-2 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#caa02f] shadow-inner"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
             >
               <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
 
-        {/* Segmented Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar mt-3 pt-0.5 pb-1">
-          {SECTION_TABS.map((tab) => {
-            const isActive = activeTab === tab;
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider whitespace-nowrap shrink-0 transition-all ${
-                  isActive
-                    ? 'bg-slate-950 text-[#caa02f] shadow-md ring-2 ring-[#caa02f]'
-                    : 'bg-white/80 text-slate-800 hover:bg-white border border-black/10'
-                }`}
-              >
-                {tab}
-              </button>
-            );
-          })}
+        {/* Section Filter Pills Horizontal Scroll */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2.5 pb-0.5">
+          {SECTIONS.map((sec) => (
+            <button
+              key={sec}
+              onClick={() => setSelectedSection(sec)}
+              className={`px-3 py-1 rounded-full text-[11px] font-black tracking-wide whitespace-nowrap transition-all shadow-2xs ${
+                selectedSection === sec
+                  ? 'bg-[#caa02f] text-slate-950 font-black ring-1 ring-amber-300'
+                  : 'bg-white/80 text-slate-700 border border-slate-200 hover:bg-white'
+              }`}
+            >
+              {sec}
+            </button>
+          ))}
+        </div>
+
+        {/* House Filter Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2">
+          {HOUSES.map((h) => (
+            <button
+              key={h.name}
+              onClick={() => setSelectedHouse(h.name)}
+              className={`flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold whitespace-nowrap transition-all border ${
+                selectedHouse === h.name
+                  ? 'bg-slate-950 text-white border-slate-950 shadow-xs'
+                  : 'bg-white/70 text-slate-600 border-slate-200'
+              }`}
+            >
+              {h.name !== 'All Houses' && (
+                <span
+                  className="w-2 h-2 rounded-full inline-block"
+                  style={{ backgroundColor: h.color }}
+                />
+              )}
+              <span>{h.name}</span>
+            </button>
+          ))}
         </div>
       </header>
 
-      {/* 2. STATS & INFO BAR */}
-      <div className="px-4 py-2 flex items-center justify-between text-xs font-bold text-[#8c670b] relative z-10">
-        <div className="flex items-center gap-1.5 font-mono">
-          <Award className="w-3.5 h-3.5 text-[#caa02f]" />
-          <span>{filteredEvents.length} Events Displayed</span>
-        </div>
-        {lastRefreshed && (
-          <span className="text-[10px] text-slate-600 font-mono">
-            Updated {lastRefreshed}
-          </span>
-        )}
-      </div>
-
-      {/* 3. EVENT RESULTS STREAM */}
-      <main className="flex-1 px-4 space-y-4 relative z-10">
-        <AnimatePresence mode="popLayout">
-          {filteredEvents.length > 0 ? (
-            filteredEvents.map((event) => (
-              <MobileResultCard key={event.id} event={event} />
-            ))
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-16 px-6 bg-white/50 backdrop-blur-md rounded-3xl border border-black/10 my-8 shadow-sm"
-            >
-              <div className="w-14 h-14 rounded-full bg-[#caa02f]/20 text-[#8c670b] flex items-center justify-center mx-auto mb-3">
-                <Search className="w-7 h-7" />
-              </div>
-              <h4 className="text-base font-black text-slate-900">No Results Found</h4>
-              <p className="text-xs text-slate-600 font-medium mt-1">
-                Try searching with a different keyword or section filter.
-              </p>
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="mt-4 px-4 py-1.5 rounded-full bg-slate-950 text-[#caa02f] text-xs font-black uppercase tracking-wider shadow-sm"
-                >
-                  Clear Search
-                </button>
-              )}
-            </motion.div>
+      {/* 2. MAIN RESULTS FEED */}
+      <main className="flex-1 px-3.5 pt-3.5 max-w-lg mx-auto w-full">
+        <div className="flex items-center justify-between mb-3 px-1 text-xs text-[#8c670b] font-bold">
+          <span>Published Events ({filteredEvents.length})</span>
+          {lastRefreshed && (
+            <span className="text-[10px] text-slate-500 font-mono">
+              Synced {lastRefreshed}
+            </span>
           )}
-        </AnimatePresence>
+        </div>
+
+        {filteredEvents.length === 0 ? (
+          <div className="bg-white/90 backdrop-blur-md rounded-2xl p-8 text-center border border-[#caa02f]/30 shadow-sm mt-4">
+            <Trophy className="w-10 h-10 text-[#caa02f]/60 mx-auto mb-2" />
+            <h3 className="text-sm font-black text-slate-900 uppercase">No Results Found</h3>
+            <p className="text-xs text-slate-500 mt-1">
+              Try adjusting your search query or filter options.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3.5">
+            {filteredEvents.map((ev, idx) => (
+              <motion.div
+                key={ev.id || idx}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, delay: Math.min(idx * 0.04, 0.3) }}
+                className="bg-gradient-to-br from-[#120e06] via-[#1a1408] to-[#0f0c05] border-2 border-[#caa02f]/70 rounded-2xl p-3.5 text-white shadow-md relative overflow-hidden"
+              >
+                {/* Header Tag + Code */}
+                <div className="flex items-center justify-between border-b border-[#caa02f]/30 pb-2 mb-2.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="px-2 py-0.5 rounded-full bg-[#caa02f]/25 border border-[#caa02f]/40 text-[#fff7db] text-[10px] font-black uppercase tracking-wider">
+                      {ev.section || 'General'}
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded bg-white/10 text-amber-200/80 text-[10px] font-bold uppercase">
+                      {ev.category || 'ON STAGE'}
+                    </span>
+                  </div>
+
+                  {ev.event_code && (
+                    <span className="font-mono text-[10px] font-black text-amber-300 bg-black/80 px-2 py-0.5 rounded border border-white/15">
+                      #{ev.event_code}
+                    </span>
+                  )}
+                </div>
+
+                {/* Event Name */}
+                <h3 className="text-base font-black text-white tracking-tight leading-snug mb-3">
+                  {ev.eventName}
+                </h3>
+
+                {/* Winners List */}
+                <div className="space-y-1.5">
+                  {ev.winners && ev.winners.length > 0 ? (
+                    ev.winners.map((w, wIdx) => {
+                      const isFirst = w.pos === 1;
+                      const isSecond = w.pos === 2;
+                      const isThird = w.pos === 3;
+
+                      return (
+                        <div
+                          key={wIdx}
+                          className={`flex items-center justify-between p-2 rounded-xl border transition-all ${
+                            isFirst
+                              ? 'bg-gradient-to-r from-amber-950/80 via-[#181308] to-[#120e06] border-amber-400/80 shadow-xs'
+                              : isSecond
+                              ? 'bg-[#0f1115] border-slate-400/40'
+                              : isThird
+                              ? 'bg-[#140c07] border-amber-800/40'
+                              : 'bg-black/50 border-white/10'
+                          }`}
+                        >
+                          {/* Rank Crest & Name */}
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div
+                              className={`w-6 h-6 rounded-lg flex items-center justify-center font-black text-xs font-mono shrink-0 shadow-xs ${
+                                isFirst
+                                  ? 'bg-gradient-to-br from-yellow-300 via-amber-400 to-amber-500 text-slate-950 ring-1 ring-yellow-200 font-black'
+                                  : isSecond
+                                  ? 'bg-gradient-to-br from-white via-slate-200 to-slate-400 text-slate-950 font-black'
+                                  : isThird
+                                  ? 'bg-gradient-to-br from-amber-600 to-amber-800 text-amber-100 font-bold'
+                                  : 'bg-slate-700 text-white'
+                              }`}
+                            >
+                              {w.pos}
+                            </div>
+
+                            <div className="min-w-0">
+                              <div className="font-extrabold text-white text-xs truncate flex items-center gap-1.5">
+                                <span className="truncate">{w.name}</span>
+                                {w.chest_no && (
+                                  <span className="text-[10px] font-mono font-bold text-yellow-200 bg-black/70 px-1 py-0.2 rounded border border-amber-400/40 shrink-0">
+                                    #{w.chest_no}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span
+                                  className="w-2 h-2 rounded-full inline-block shrink-0 shadow-xs ring-1 ring-white/40"
+                                  style={{ backgroundColor: w.teamColor || '#caa02f' }}
+                                />
+                                <span className="text-[11px] font-bold text-[#fde68a] truncate">
+                                  {w.teamName}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Points & Grade */}
+                          <div className="text-right shrink-0 pl-2">
+                            <div className="font-mono font-black text-sm text-yellow-300">
+                              +{w.points}
+                              <span className="text-[9px] font-bold text-amber-200/80 uppercase ml-0.5">
+                                Pts
+                              </span>
+                            </div>
+                            {w.grade && (
+                              <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-950 inline-block shadow-2xs">
+                                {w.grade}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-3 text-xs text-amber-200/60 font-mono italic">
+                      Awaiting jury adjudication...
+                    </div>
+                  )}
+                </div>
+
+                {/* Card Footer */}
+                <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-amber-200/70 font-mono">
+                  <span>AAWA OFFICIAL JURY</span>
+                  <span className="text-[#caa02f] font-bold flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3" /> VERIFIED
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </main>
 
-      {/* 4. FLOATING SCROLL TO TOP */}
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={scrollToTop}
-            className="fixed bottom-6 right-5 z-50 w-11 h-11 rounded-full bg-slate-950 text-[#caa02f] border-2 border-[#caa02f] shadow-2xl flex items-center justify-center active:scale-95 transition-all"
-          >
-            <ChevronUp className="w-6 h-6" />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      {/* 3. BOTTOM TICKER FOOTER */}
+      <footer className="fixed bottom-0 left-0 right-0 z-40 bg-black/95 text-[#fce8a6] border-t border-[#caa02f]/50 py-2 px-4 flex items-center justify-between text-[11px] font-mono">
+        <div className="flex items-center gap-1.5 text-[#caa02f] font-bold">
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>AAWA '26 • When Values Speak</span>
+        </div>
+        <div className="text-amber-200/70 text-[10px]">
+          Live Stream Mode
+        </div>
+      </footer>
     </div>
   );
 }
