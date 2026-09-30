@@ -17,7 +17,8 @@ import {
   Calendar,
   Grid,
   List,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
 
 // ==========================================
@@ -46,7 +47,7 @@ interface EventItem {
   winners: Winner[];
 }
 
-const SECTIONS = ['All', 'Aliya', 'Foundation', 'General', 'On Stage', 'Off Stage'];
+const SECTIONS = ['All', 'Aliya', 'Foundation', 'Foundation General', 'General', 'On Stage', 'Off Stage'];
 const HOUSES = [
   { name: 'All Houses', color: '#caa02f' },
   { name: 'FUSTAT', color: '#10b981' },
@@ -54,112 +55,43 @@ const HOUSES = [
   { name: 'ISHBILIYA', color: '#ef4444' }
 ];
 
-const SAMPLE_EVENTS: EventItem[] = [
-  {
-    id: "sample-1",
-    eventName: "Elocution English (Aliya)",
-    event_code: "EL-EN-01",
-    category: "ON STAGE",
-    section: "Aliya",
-    winners: [
-      { pos: 1, name: "Muhammed Sinan", chest_no: "104", teamName: "Hormuz", teamColor: "#2563eb", grade: "A+", points: 15 },
-      { pos: 1, name: "Ahmad Raees", chest_no: "212", teamName: "Aden", teamColor: "#10b981", grade: "A+", points: 15 },
-      { pos: 2, name: "Ibrahim Waseem", chest_no: "305", teamName: "Zanzibar", teamColor: "#ef4444", grade: "A", points: 10 },
-      { pos: 3, name: "Sayyid Adil", chest_no: "109", teamName: "Hormuz", teamColor: "#2563eb", grade: "B", points: 6 },
-    ]
-  },
-  {
-    id: "sample-2",
-    eventName: "Classical Arabic Calligraphy",
-    event_code: "AR-CL-04",
-    category: "OFF STAGE",
-    section: "Foundation",
-    winners: [
-      { pos: 1, name: "Faisal Salih", chest_no: "318", teamName: "Zanzibar", teamColor: "#ef4444", grade: "A+", points: 12 },
-      { pos: 2, name: "Sayyid Adil", chest_no: "109", teamName: "Hormuz", teamColor: "#2563eb", grade: "A", points: 8 },
-      { pos: 3, name: "Nabeel Ishaq", chest_no: "220", teamName: "Aden", teamColor: "#10b981", grade: "A", points: 5 },
-    ]
-  },
-  {
-    id: "sample-3",
-    eventName: "Grand Mashup Musicale",
-    event_code: "MU-GR-09",
-    category: "ON STAGE",
-    section: "General",
-    winners: [
-      { pos: 1, name: "Team Aden Ensemble", chest_no: null, teamName: "Aden", teamColor: "#10b981", grade: "A+", points: 25 },
-      { pos: 2, name: "Hormuz Symphony", chest_no: null, teamName: "Hormuz", teamColor: "#2563eb", grade: "A", points: 18 },
-      { pos: 3, name: "Zanzibar Vocalists", chest_no: null, teamName: "Zanzibar", teamColor: "#ef4444", grade: "A", points: 12 },
-    ]
-  },
-  {
-    id: "sample-4",
-    eventName: "Parliamentary Debate",
-    event_code: "DB-SE-02",
-    category: "ON STAGE",
-    section: "Aliya",
-    winners: [
-      { pos: 1, name: "Hanoon & Team", chest_no: "115", teamName: "Hormuz", teamColor: "#2563eb", grade: "A+", points: 20 },
-      { pos: 2, name: "Faheem & Team", chest_no: "324", teamName: "Zanzibar", teamColor: "#ef4444", grade: "A", points: 14 },
-      { pos: 2, name: "Shuhaib & Team", chest_no: "231", teamName: "Aden", teamColor: "#10b981", grade: "A", points: 14 },
-      { pos: 3, name: "Ishaq PC", chest_no: "311", teamName: "Zanzibar", teamColor: "#ef4444", grade: "B", points: 8 },
-    ]
-  },
-  {
-    id: "sample-5",
-    eventName: "Spot Poetry Writing",
-    event_code: "PT-FD-07",
-    category: "OFF STAGE",
-    section: "Foundation",
-    winners: [
-      { pos: 1, name: "Minhaj PV", chest_no: "216", teamName: "Aden", teamColor: "#10b981", grade: "A+", points: 10 },
-      { pos: 2, name: "Ziyad Hussain", chest_no: "108", teamName: "Hormuz", teamColor: "#2563eb", grade: "A", points: 6 },
-      { pos: 3, name: "Shemeem EC", chest_no: "329", teamName: "Zanzibar", teamColor: "#ef4444", grade: "B", points: 3 },
-    ]
-  },
-  {
-    id: "sample-6",
-    eventName: "Urdu Ghazal Rendering",
-    event_code: "GZ-UR-11",
-    category: "ON STAGE",
-    section: "Aliya",
-    winners: [
-      { pos: 1, name: "Ahmad Raees", chest_no: "212", teamName: "Aden", teamColor: "#10b981", grade: "A+", points: 15 },
-      { pos: 2, name: "Muhammed Sinan", chest_no: "104", teamName: "Hormuz", teamColor: "#2563eb", grade: "A", points: 10 },
-      { pos: 3, name: "Ishaq PC", chest_no: "311", teamName: "Zanzibar", teamColor: "#ef4444", grade: "A", points: 6 },
-    ]
-  }
-];
-
 export default function MobileViewPage() {
-  const [events, setEvents] = useState<EventItem[]>(SAMPLE_EVENTS);
+  const [events, setEvents] = useState<EventItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSection, setSelectedSection] = useState('All');
   const [selectedHouse, setSelectedHouse] = useState('All Houses');
   const [viewMode, setViewMode] = useState<'cards' | 'compact'>('cards');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<string>('');
 
-  // 1. Fetch live published event results
-  const fetchResults = async () => {
-    setIsLoading(true);
+  // 1. Fetch live published event results directly from database API
+  const fetchResults = async (showRefreshSpinner = false) => {
+    if (showRefreshSpinner) setIsRefreshing(true);
     try {
-      const res = await fetch('/api/data?t=' + Date.now(), { cache: 'no-store' });
+      const res = await fetch('/api/data?t=' + Date.now(), { 
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
       const json = await res.json();
-      if (json.success && json.events && json.events.length > 0) {
+      if (json.success && json.events) {
         setEvents(json.events);
       }
-      setLastRefreshed(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      setLastRefreshed(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     } catch (err) {
-      console.error('Mobile view fetch error:', err);
+      console.error('Mobile view live fetch error:', err);
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchResults();
-    const timer = setInterval(fetchResults, 15000); // 15s auto refresh
+    fetchResults(false);
+    const timer = setInterval(() => fetchResults(false), 12000); // Auto-refresh every 12 seconds
     return () => clearInterval(timer);
   }, []);
 
@@ -208,7 +140,7 @@ export default function MobileViewPage() {
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,#fffcf0_0%,#faedd0_40%,#caa02f_120%)] text-slate-900 flex flex-col font-sans pb-16">
       
       {/* 1. COMPACT MOBILE HEADER */}
-      <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-lg border-b border-[#caa02f]/30 px-4 py-3 shadow-xs">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-lg border-b border-[#caa02f]/30 px-4 py-3 shadow-xs">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img
@@ -234,12 +166,12 @@ export default function MobileViewPage() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={fetchResults}
-              disabled={isLoading}
+              onClick={() => fetchResults(true)}
+              disabled={isRefreshing}
               className="p-2 rounded-xl bg-[#caa02f]/15 hover:bg-[#caa02f]/25 text-[#997314] active:scale-95 transition-all border border-[#caa02f]/40"
               title="Refresh results"
             >
-              <RotateCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <RotateCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
             <button
               onClick={() => setViewMode(viewMode === 'cards' ? 'compact' : 'cards')}
@@ -259,7 +191,7 @@ export default function MobileViewPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search event, student, chest #, house..."
-            className="w-full bg-white/90 border border-[#caa02f]/40 rounded-xl pl-9 pr-8 py-2 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#caa02f] shadow-inner"
+            className="w-full bg-white/95 border border-[#caa02f]/40 rounded-xl pl-9 pr-8 py-2 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-[#caa02f] shadow-inner"
           />
           {searchQuery && (
             <button
@@ -271,7 +203,7 @@ export default function MobileViewPage() {
           )}
         </div>
 
-        {/* Section Filter Pills Horizontal Scroll */}
+        {/* Section Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2.5 pb-0.5">
           {SECTIONS.map((sec) => (
             <button
@@ -280,7 +212,7 @@ export default function MobileViewPage() {
               className={`px-3 py-1 rounded-full text-[11px] font-black tracking-wide whitespace-nowrap transition-all shadow-2xs ${
                 selectedSection === sec
                   ? 'bg-[#caa02f] text-slate-950 font-black ring-1 ring-amber-300'
-                  : 'bg-white/80 text-slate-700 border border-slate-200 hover:bg-white'
+                  : 'bg-white/85 text-slate-700 border border-slate-200 hover:bg-white'
               }`}
             >
               {sec}
@@ -297,7 +229,7 @@ export default function MobileViewPage() {
               className={`flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-extrabold whitespace-nowrap transition-all border ${
                 selectedHouse === h.name
                   ? 'bg-slate-950 text-white border-slate-950 shadow-xs'
-                  : 'bg-white/70 text-slate-600 border-slate-200'
+                  : 'bg-white/75 text-slate-600 border-slate-200'
               }`}
             >
               {h.name !== 'All Houses' && (
@@ -318,17 +250,35 @@ export default function MobileViewPage() {
           <span>Published Events ({filteredEvents.length})</span>
           {lastRefreshed && (
             <span className="text-[10px] text-slate-500 font-mono">
-              Synced {lastRefreshed}
+              Live: {lastRefreshed}
             </span>
           )}
         </div>
 
-        {filteredEvents.length === 0 ? (
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="space-y-3.5 pt-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white/70 rounded-2xl p-4 border border-[#caa02f]/20 animate-pulse space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="h-4 w-24 bg-slate-200 rounded"></div>
+                  <div className="h-4 w-12 bg-slate-200 rounded"></div>
+                </div>
+                <div className="h-5 w-3/4 bg-slate-300 rounded"></div>
+                <div className="space-y-2 pt-1">
+                  <div className="h-8 bg-slate-200/80 rounded-xl"></div>
+                  <div className="h-8 bg-slate-200/80 rounded-xl"></div>
+                  <div className="h-8 bg-slate-200/80 rounded-xl"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredEvents.length === 0 ? (
           <div className="bg-white/90 backdrop-blur-md rounded-2xl p-8 text-center border border-[#caa02f]/30 shadow-sm mt-4">
             <Trophy className="w-10 h-10 text-[#caa02f]/60 mx-auto mb-2" />
             <h3 className="text-sm font-black text-slate-900 uppercase">No Results Found</h3>
             <p className="text-xs text-slate-500 mt-1">
-              Try adjusting your search query or filter options.
+              Try adjusting your search query or section filter.
             </p>
           </div>
         ) : (
@@ -338,7 +288,7 @@ export default function MobileViewPage() {
                 key={ev.id || idx}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, delay: Math.min(idx * 0.04, 0.3) }}
+                transition={{ duration: 0.25, delay: Math.min(idx * 0.03, 0.2) }}
                 className="bg-gradient-to-br from-[#120e06] via-[#1a1408] to-[#0f0c05] border-2 border-[#caa02f]/70 rounded-2xl p-3.5 text-white shadow-md relative overflow-hidden"
               >
                 {/* Header Tag + Code */}
