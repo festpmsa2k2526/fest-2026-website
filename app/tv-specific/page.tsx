@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useAnimationFrame, useMotionValue, useTransform, MotionValue } from 'framer-motion';
-import { Trophy, Zap, Clock, Award, Sparkles, Radio, Flame, Shield } from 'lucide-react';
+import { motion, AnimatePresence, useAnimationFrame, useMotionValue } from 'framer-motion';
+import { Trophy, Zap, Clock, Award, Sparkles, Radio, Shield } from 'lucide-react';
 import { supabase } from '@/app/lib/supabase';
 
 // ==========================================
@@ -185,27 +185,18 @@ const LiveClock = () => {
 };
 
 // ==========================================
-// 🃏 CONVEX 3D CURVED RESULT CARD CONTENT
-// Geometric dot background with 100% solid, ultra-clear student rows
+// 🃏 HARDWARE-ACCELERATED TV RESULT CARD
 // ==========================================
-const Convex3DCardContent = ({ event }: { event: any }) => {
+const TvResultCard = ({ event }: { event: any }) => {
   const winners = event.winners ? event.winners.slice(0, 4) : [];
   const isCompact = winners.length > 3;
 
   return (
-    <div 
-      className="relative select-none w-full"
-      style={{
-        transform: 'translateZ(0)',
-        WebkitFontSmoothing: 'antialiased',
-        MozOsxFontSmoothing: 'grayscale',
-        textRendering: 'optimizeLegibility',
-      }}
-    >
+    <div className="relative w-[380px] sm:w-[400px] md:w-[420px] shrink-0 select-none">
       {/* Outer Golden Halo Glow */}
-      <div className="absolute -inset-1 bg-gradient-to-r from-[#caa02f]/45 via-amber-400/35 to-[#caa02f]/45 rounded-[2rem] opacity-70 pointer-events-none"></div>
+      <div className="absolute -inset-1 bg-gradient-to-r from-[#caa02f]/40 via-amber-400/30 to-[#caa02f]/40 rounded-[2rem] opacity-70 pointer-events-none"></div>
 
-      {/* Main 3D Card Shell with Outward Convex Illusion */}
+      {/* Main Card Shell */}
       <div 
         className="relative rounded-[1.8rem] p-4 md:p-5 text-white overflow-hidden border-2 border-[#caa02f]/80"
         style={{
@@ -221,7 +212,7 @@ const Convex3DCardContent = ({ event }: { event: any }) => {
           }}
         />
 
-        {/* Geometric Tech Square Dots Grid on Card Shell */}
+        {/* Geometric Tech Square Dots Grid */}
         <div 
           className="absolute inset-0 pointer-events-none opacity-25"
           style={{
@@ -253,7 +244,7 @@ const Convex3DCardContent = ({ event }: { event: any }) => {
           </h3>
         </div>
 
-        {/* Winners List (100% Solid Opaque Rows) */}
+        {/* Winners List (100% Solid Rows) */}
         <div className={`relative z-10 my-1 ${isCompact ? 'space-y-1.5' : 'space-y-2'}`}>
           {winners.map((w: any, idx: number) => {
             const isFirst = w.pos === 1;
@@ -333,7 +324,7 @@ const Convex3DCardContent = ({ event }: { event: any }) => {
         <div className="relative z-10 pt-2 mt-2 border-t border-white/15 flex items-center justify-between text-[10px] md:text-[11px] text-amber-200/80 font-mono">
           <span className="font-bold tracking-wider">AAWA ARTS FEST</span>
           <span className="text-[#caa02f] font-black flex items-center gap-1 tracking-wider">
-            <Shield className="w-3 h-3" /> OFFICIAL
+            <Shield className="w-3.5 h-3.5" /> OFFICIAL
           </span>
         </div>
       </div>
@@ -342,86 +333,21 @@ const Convex3DCardContent = ({ event }: { event: any }) => {
 };
 
 // ==========================================
-// 🌊 INDIVIDUAL DYNAMIC 3D CURVE CARD
-// Transforms in 3D arc based on continuous horizontal scroll position
+// 🌊 HARDWARE-ACCELERATED TV RUNWAY
 // ==========================================
-const Dynamic3DCurveCard = ({ 
-  event, 
-  index, 
-  scrollX, 
-  cardTotalWidth,
-  viewportWidth
-}: { 
-  event: any; 
-  index: number; 
-  scrollX: MotionValue<number>; 
-  cardTotalWidth: number;
-  viewportWidth: number;
-}) => {
-  const initialX = index * cardTotalWidth;
-
-  // Relative distance from center of screen
-  const relativeX = useTransform(scrollX, (val) => {
-    const center = (viewportWidth / 2) - (cardTotalWidth / 2);
-    return val + initialX - center;
-  });
-
-  // Parabolic Arc Trajectory: center card is pushed forward (+85px translateZ), edges pulled backward (-120px)
-  const z = useTransform(relativeX, [-1200, -750, -350, 0, 350, 750, 1200], [-180, -110, -20, 85, -20, -110, -180]);
-  const rotateY = useTransform(relativeX, [-1200, -750, -350, 0, 350, 750, 1200], [25, 18, 10, 0, -10, -18, -25]);
-  const scale = useTransform(relativeX, [-1200, -750, -350, 0, 350, 750, 1200], [0.85, 0.92, 0.98, 1.05, 0.98, 0.92, 0.85]);
-  const opacity = useTransform(relativeX, [-1300, -850, -450, 0, 450, 850, 1300], [0.05, 0.70, 0.95, 1, 0.95, 0.70, 0.05]);
-  const zIndex = useTransform(relativeX, (val) => Math.max(1, Math.round(60 - Math.abs(val) / 25)));
-
-  return (
-    <motion.div
-      className="shrink-0 w-[360px] sm:w-[380px] md:w-[400px]"
-      style={{
-        z,
-        rotateY,
-        scale,
-        opacity,
-        zIndex,
-        transformStyle: 'preserve-3d',
-        WebkitBackfaceVisibility: 'hidden',
-        backfaceVisibility: 'hidden',
-        willChange: 'transform',
-      }}
-    >
-      <Convex3DCardContent event={event} />
-    </motion.div>
-  );
-};
-
-// ==========================================
-// 🌊 CONTINUOUS 3D CURVED RUNWAY
-// Fully unobstructed, spacious vertical room
-// ==========================================
-const Continuous3DCurvedRunway = ({ events }: { events: any[] }) => {
+const TvRunway = ({ events }: { events: any[] }) => {
   const displayList = events.length > 0 ? events : SAMPLE_EVENTS;
   // Repeat 4x for smooth infinite loop
   const items = [...displayList, ...displayList, ...displayList, ...displayList];
 
   const scrollX = useMotionValue(0);
-  const cardWidth = 400;
+  const cardWidth = 420;
   const gap = 32;
   const cardTotalWidth = cardWidth + gap;
   const singleSetWidth = displayList.length * cardTotalWidth;
 
-  const [viewportWidth, setViewportWidth] = useState(1400);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setViewportWidth(window.innerWidth);
-      const handleResize = () => setViewportWidth(window.innerWidth);
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
-    }
-  }, []);
-
   useAnimationFrame((_, delta) => {
     if (singleSetWidth === 0) return;
-    // Continuous smooth glide speed (0.055 px per millisecond)
     const speed = 0.055;
     let nextX = scrollX.get() - speed * delta;
     if (nextX <= -singleSetWidth) {
@@ -431,31 +357,17 @@ const Continuous3DCurvedRunway = ({ events }: { events: any[] }) => {
   });
 
   return (
-    <div 
-      className="relative w-full h-[480px] flex items-center justify-center overflow-hidden select-none my-auto"
-      style={{
-        perspective: '1300px',
-        perspectiveOrigin: '50% 50%',
-      }}
-    >
-      {/* 3D Track extending edge-to-edge */}
+    <div className="relative w-full h-[460px] flex items-center overflow-hidden select-none my-auto">
       <motion.div 
         className="flex gap-8 items-center h-full absolute left-0"
         style={{
           x: scrollX,
-          transformStyle: 'preserve-3d',
+          transform: 'translate3d(0, 0, 0)',
           willChange: 'transform',
         }}
       >
         {items.map((event, i) => (
-          <Dynamic3DCurveCard 
-            key={`${event.id}-${i}`} 
-            event={event} 
-            index={i} 
-            scrollX={scrollX}
-            cardTotalWidth={cardTotalWidth}
-            viewportWidth={viewportWidth}
-          />
+          <TvResultCard key={`${event.id}-${i}`} event={event} />
         ))}
       </motion.div>
     </div>
@@ -463,7 +375,7 @@ const Continuous3DCurvedRunway = ({ events }: { events: any[] }) => {
 };
 
 // ==========================================
-// 🏆 COMPACT TOP SCORES HUD (3 TEAMS: Hormuz, Aden, Zanzibar)
+// 🏆 COMPACT TOP SCORES HUD (3 TEAMS ONLY)
 // ==========================================
 const TopScoresHUD = ({ 
   leaderboard, 
@@ -543,10 +455,10 @@ const BroadcastCountdownOverlay = ({
         <AnimatePresence mode="popLayout">
           <motion.div
             key={count}
-            initial={{ scale: 2.2, opacity: 0, filter: 'blur(10px)' }}
-            animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
-            exit={{ scale: 0.4, opacity: 0, filter: 'blur(15px)' }}
-            transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+            initial={{ scale: 2.2, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.4, opacity: 0 }}
+            transition={{ duration: 0.3 }}
             className="w-44 h-44 md:w-56 md:h-56 rounded-full bg-gradient-to-br from-[#caa02f] via-amber-400 to-[#caa02f] flex items-center justify-center shadow-[0_0_80px_rgba(202,160,47,0.75)] border-4 border-white/70"
           >
             <span className="font-mono font-black text-8xl md:text-9xl text-slate-950 tracking-tighter">
@@ -597,10 +509,10 @@ const BroadcastStandingsOverlay = ({
         onClick={onClose}
       >
         <motion.div
-          initial={{ scale: 0.88, y: 30 }}
+          initial={{ scale: 0.9, y: 20 }}
           animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.88, y: 30 }}
-          transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+          exit={{ scale: 0.9, y: 20 }}
+          transition={{ duration: 0.3 }}
           onClick={(e) => e.stopPropagation()}
           className="w-full max-w-5xl bg-gradient-to-br from-[#1c160a] via-[#0d0a04] to-[#181206] border-2 border-[#caa02f] rounded-[2.5rem] p-6 md:p-10 shadow-[0_0_80px_rgba(202,160,47,0.3)] relative overflow-hidden text-white flex flex-col justify-between"
         >
@@ -747,9 +659,9 @@ const BroadcastStandingsOverlay = ({
 };
 
 // ==========================================
-// 🚀 MAIN TV ARENA COMPONENT
+// 🚀 MAIN TV-SPECIFIC ARENA COMPONENT
 // ==========================================
-export default function TvScreenPage() {
+export default function TvSpecificPage() {
   const [events, setEvents] = useState<any[]>(SAMPLE_EVENTS);
   const [leaderboard, setLeaderboard] = useState<any[]>([
     { id: '1', name: 'Hormuz', color_hex: '#2563eb', points: 342, sections: { aliya: 140, foundation: 112, general: 90 } },
@@ -763,7 +675,6 @@ export default function TvScreenPage() {
   const [countdownNumber, setCountdownNumber] = useState<number>(3);
   const [durationRemaining, setDurationRemaining] = useState<number>(10);
 
-  // References to handle timers and deduplication
   const lastProcessedTriggerIdRef = useRef<string | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -795,7 +706,6 @@ export default function TvScreenPage() {
     }
   };
 
-  // 2. Clear all active broadcast timers
   const clearAllBroadcastTimers = () => {
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
@@ -807,7 +717,6 @@ export default function TvScreenPage() {
     }
   };
 
-  // 3. Process incoming broadcast commands
   const handleIncomingBroadcast = (data: BroadcastPayload) => {
     setBroadcastState(data);
 
@@ -872,7 +781,6 @@ export default function TvScreenPage() {
     }
   };
 
-  // 4. Timer for standings display duration
   const startDurationTimer = (durationSecs: number) => {
     setDurationRemaining(durationSecs);
     let remaining = durationSecs;
@@ -891,7 +799,6 @@ export default function TvScreenPage() {
     }, 1000);
   };
 
-  // 5. Setup Supabase Realtime Listener + Polling Fallback
   useEffect(() => {
     supabase
       .from('site_assets')
@@ -908,7 +815,7 @@ export default function TvScreenPage() {
       });
 
     const channel = supabase
-      .channel('tv_screen_broadcast_listener')
+      .channel('tv_screen_broadcast_listener_specific')
       .on(
         'postgres_changes',
         {
@@ -944,7 +851,7 @@ export default function TvScreenPage() {
   return (
     <div className="h-screen w-screen overflow-hidden font-sans flex flex-col justify-between relative select-none bg-[radial-gradient(ellipse_at_top,#fffcf2_0%,#faedc8_40%,#caa02f_100%)] text-slate-900">
       
-      {/* Subtle Background Geometric Dots on Canvas */}
+      {/* Subtle Background Geometric Dots */}
       <div 
         className="absolute inset-0 pointer-events-none opacity-20"
         style={{
@@ -957,7 +864,7 @@ export default function TvScreenPage() {
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/40 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-amber-400/25 rounded-full blur-3xl pointer-events-none"></div>
 
-      {/* 1. TOP BAR (Compact, cleanly decoupled from cards) */}
+      {/* 1. TOP BAR */}
       <header className="h-[10vh] min-h-[65px] max-h-[85px] flex items-center justify-between px-6 md:px-8 border-b border-black/10 bg-white/40 backdrop-blur-md z-40 shadow-xs relative shrink-0">
         <div className="flex items-center gap-4 md:gap-6">
           <img
@@ -990,12 +897,12 @@ export default function TvScreenPage() {
         </div>
       </header>
 
-      {/* 2. MAIN 3D CONTINUOUS CURVED RUNWAY (Unobstructed full visibility) */}
+      {/* 2. MAIN HARDWARE-ACCELERATED TV RUNWAY */}
       <main className="flex-1 flex flex-col justify-center items-center w-full relative z-10 px-0 overflow-hidden my-auto">
-        <Continuous3DCurvedRunway events={events} />
+        <TvRunway events={events} />
       </main>
 
-      {/* 3. BOTTOM NOTIFICATION MARQUEE (Compact, cleanly decoupled from cards) */}
+      {/* 3. BOTTOM NOTIFICATION MARQUEE */}
       <footer className="h-[5vh] min-h-[36px] max-h-[44px] bg-black text-[#fce8a6] flex items-center overflow-hidden relative z-40 border-t-2 border-[#caa02f] shadow-2xl shrink-0">
         <div className="bg-[#caa02f] text-black h-full px-5 flex items-center gap-1.5 z-20 skew-x-[-12deg] -ml-4 shadow-lg">
           <Zap className="w-3.5 h-3.5 text-black animate-pulse skew-x-[12deg]" />
@@ -1018,7 +925,7 @@ export default function TvScreenPage() {
         </motion.div>
       </footer>
 
-      {/* 4. BROADCAST COUNTDOWN OVERLAY (Admin Dashboard Triggered) */}
+      {/* 4. BROADCAST COUNTDOWN OVERLAY */}
       <AnimatePresence>
         {broadcastPhase === 'COUNTDOWN' && (
           <BroadcastCountdownOverlay 
@@ -1028,7 +935,7 @@ export default function TvScreenPage() {
         )}
       </AnimatePresence>
 
-      {/* 5. BROADCAST STANDINGS OVERLAY (Admin Dashboard Triggered) */}
+      {/* 5. BROADCAST STANDINGS OVERLAY */}
       <BroadcastStandingsOverlay 
         isOpen={broadcastPhase === 'STANDINGS'} 
         onClose={() => {
