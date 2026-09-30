@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useAnimationFrame, useMotionValue, useTransform, MotionValue } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Zap, Clock, Award, Sparkles, Radio, Flame, Shield } from 'lucide-react';
 import { supabase } from '@/app/lib/supabase';
 
@@ -30,7 +30,7 @@ const SAMPLE_EVENTS = [
     section: "Aliya",
     winners: [
       { pos: 1, name: "Muhammed Sinan", chest_no: "104", teamName: "Hormuz", teamColor: "#2563eb", grade: "A+", points: 15 },
-      { pos: 1, name: "Ahmad Raees", chest_no: "212", teamName: "Aden", teamColor: "#10b981", grade: "A+", points: 15 }, // Tied 1st
+      { pos: 1, name: "Ahmad Raees", chest_no: "212", teamName: "Aden", teamColor: "#10b981", grade: "A+", points: 15 },
       { pos: 2, name: "Ibrahim Waseem", chest_no: "305", teamName: "Zanzibar", teamColor: "#ef4444", grade: "A", points: 10 },
       { pos: 3, name: "Sayyid Adil", chest_no: "109", teamName: "Hormuz", teamColor: "#2563eb", grade: "B", points: 6 },
     ]
@@ -68,7 +68,7 @@ const SAMPLE_EVENTS = [
     winners: [
       { pos: 1, name: "Hanoon & Team", chest_no: "115", teamName: "Hormuz", teamColor: "#2563eb", grade: "A+", points: 20 },
       { pos: 2, name: "Faheem & Team", chest_no: "324", teamName: "Zanzibar", teamColor: "#ef4444", grade: "A", points: 14 },
-      { pos: 2, name: "Shuhaib & Team", chest_no: "231", teamName: "Aden", teamColor: "#10b981", grade: "A", points: 14 }, // Tied 2nd
+      { pos: 2, name: "Shuhaib & Team", chest_no: "231", teamName: "Aden", teamColor: "#10b981", grade: "A", points: 14 },
       { pos: 3, name: "Ishaq PC", chest_no: "311", teamName: "Zanzibar", teamColor: "#ef4444", grade: "B", points: 8 },
     ]
   },
@@ -106,7 +106,7 @@ const LIVE_UPDATES = [
 ];
 
 // ==========================================
-// 🔊 SYNTHESIZED WEB AUDIO ENGINE
+// 🔊 SYNTHESIZED WEB AUDIO ENGINE (SAFE)
 // ==========================================
 export function playTvSound(type: 'beep' | 'reveal') {
   try {
@@ -147,7 +147,7 @@ export function playTvSound(type: 'beep' | 'reveal') {
       });
     }
   } catch (err) {
-    console.warn('Audio playback error:', err);
+    // Audio Context restricted on TV without gesture
   }
 }
 
@@ -175,8 +175,8 @@ const LiveClock = () => {
   }, []);
 
   return (
-    <div className="flex items-center gap-3 bg-black/45 backdrop-blur-md px-5 py-2 rounded-2xl border border-white/20 shadow-md">
-      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+    <div className="flex items-center gap-3 bg-black/50 backdrop-blur-md px-5 py-2 rounded-2xl border border-white/20 shadow-md shrink-0">
+      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
       <div className="font-mono font-black text-xl md:text-2xl text-white tracking-wider drop-shadow-sm">
         {time || '--:--:--'}
       </div>
@@ -186,11 +186,8 @@ const LiveClock = () => {
 
 // ==========================================
 // 🃏 CONVEX 3D CURVED RESULT CARD CONTENT
-// Geometric dot background with 100% solid, ultra-clear student rows
-// Supports tied 1st, 2nd, and 3rd positions perfectly
 // ==========================================
 const Convex3DCardContent = ({ event }: { event: any }) => {
-  // Support up to 4 winners for tied positions (e.g. two 1st or two 2nd)
   const winners = event.winners ? event.winners.slice(0, 4) : [];
   const isCompact = winners.length > 3;
 
@@ -198,48 +195,33 @@ const Convex3DCardContent = ({ event }: { event: any }) => {
     <div 
       className="relative select-none w-full"
       style={{
-        transform: 'translateZ(0)',
         WebkitFontSmoothing: 'antialiased',
         MozOsxFontSmoothing: 'grayscale',
         textRendering: 'optimizeLegibility',
       }}
     >
       {/* Outer Golden Halo Glow */}
-      <div className="absolute -inset-1 bg-gradient-to-r from-[#caa02f]/45 via-amber-400/35 to-[#caa02f]/45 rounded-[2rem] opacity-70 pointer-events-none"></div>
+      <div className="absolute -inset-1 bg-gradient-to-r from-[#caa02f]/45 via-amber-400/35 to-[#caa02f]/45 rounded-[2rem] opacity-70 pointer-events-none" />
 
       {/* Main 3D Card Shell with Outward Convex Illusion */}
       <div 
         className="relative rounded-[1.8rem] p-5 text-white overflow-hidden border-2 border-[#caa02f]/80"
         style={{
-          background: `
-            linear-gradient(90deg, #0d0a04 0%, #1f1809 50%, #0d0a04 100%)
-          `,
-          boxShadow: `
-            inset 18px 0 25px -5px rgba(0,0,0,0.95), 
-            inset -18px 0 25px -5px rgba(0,0,0,0.95),
-            0 20px 40px -10px rgba(0,0,0,0.85)
-          `
+          background: 'linear-gradient(90deg, #0d0a04 0%, #1f1809 50%, #0d0a04 100%)',
+          boxShadow: '0 20px 40px -10px rgba(0,0,0,0.85)',
         }}
       >
-        {/* Specular Center Axis Highlight */}
-        <div 
-          className="absolute inset-0 pointer-events-none opacity-15"
-          style={{
-            background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)'
-          }}
-        />
-
         {/* Geometric Tech Square Dots Grid on Card Shell */}
         <div 
-          className="absolute inset-0 pointer-events-none opacity-25"
+          className="absolute inset-0 pointer-events-none opacity-20"
           style={{
-            backgroundImage: `radial-gradient(#caa02f 1.5px, transparent 1.5px)`,
-            backgroundSize: '16px 16px'
+            backgroundImage: 'radial-gradient(#caa02f 1.5px, transparent 1.5px)',
+            backgroundSize: '16px 16px',
           }}
         />
 
         {/* Top Ambient Glow */}
-        <div className="absolute -top-14 left-1/2 -translate-x-1/2 w-48 h-20 bg-[#caa02f]/25 rounded-full blur-xl pointer-events-none"></div>
+        <div className="absolute -top-14 left-1/2 -translate-x-1/2 w-48 h-20 bg-[#caa02f]/25 rounded-full blur-xl pointer-events-none" />
 
         {/* Card Header */}
         <div className="relative z-10 border-b border-[#caa02f]/40 pb-3 mb-2.5">
@@ -261,7 +243,7 @@ const Convex3DCardContent = ({ event }: { event: any }) => {
           </h3>
         </div>
 
-        {/* Winners List (Solid Opaque Row Cards to ensure razor-sharp text legibility) */}
+        {/* Winners List (Solid Opaque Row Cards) */}
         <div className={`relative z-10 my-1 ${isCompact ? 'space-y-1.5' : 'space-y-2'}`}>
           {winners.map((w: any, idx: number) => {
             const isFirst = w.pos === 1;
@@ -275,29 +257,24 @@ const Convex3DCardContent = ({ event }: { event: any }) => {
                   isCompact ? 'p-2' : 'p-2.5'
                 } ${
                   isFirst 
-                    ? 'bg-gradient-to-r from-amber-950/90 via-[#181308] to-[#120e06] border-amber-400/90 shadow-[0_0_15px_rgba(202,160,47,0.3)]'
+                    ? 'bg-gradient-to-r from-amber-950/95 via-[#181308] to-[#120e06] border-amber-400/90 shadow-[0_0_15px_rgba(202,160,47,0.3)]'
                     : isSecond
                     ? 'bg-[#0f1115] border-slate-400/50 shadow-sm'
                     : 'bg-[#140c07] border-amber-800/50 shadow-sm'
                 }`}
-                style={{
-                  // 100% Solid opaque layer to prevent background dots from showing behind text
-                  opacity: 1,
-                  backdropFilter: 'none',
-                }}
               >
                 {/* Left: Position Crest + Name & Team */}
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div 
-                    className={`rounded-lg flex items-center justify-center font-black text-xs font-mono shrink-0 shadow-md ${
+                    className={`rounded-lg flex items-center justify-center font-black font-mono shrink-0 shadow-md ${
                       isCompact ? 'w-6 h-6 text-[11px]' : 'w-7 h-7 text-xs'
                     } ${
                       isFirst
-                        ? 'bg-gradient-to-br from-yellow-300 via-amber-400 to-amber-500 text-slate-950 font-black ring-2 ring-yellow-200 shadow-md'
+                        ? 'bg-gradient-to-br from-yellow-300 via-amber-400 to-amber-500 text-slate-950 ring-2 ring-yellow-200'
                         : isSecond
-                        ? 'bg-gradient-to-br from-white via-slate-200 to-slate-400 text-slate-950 font-black ring-1 ring-white/70 shadow-md'
+                        ? 'bg-gradient-to-br from-white via-slate-200 to-slate-400 text-slate-950 ring-1 ring-white/70'
                         : isThird
-                        ? 'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-900 text-amber-100 font-bold ring-1 ring-amber-400/50 shadow-md'
+                        ? 'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-900 text-amber-100 ring-1 ring-amber-400/50'
                         : 'bg-slate-700 text-white font-bold'
                     }`}
                   >
@@ -344,7 +321,7 @@ const Convex3DCardContent = ({ event }: { event: any }) => {
 
         {/* Card Footer Accent */}
         <div className="relative z-10 pt-2.5 mt-2 border-t border-white/15 flex items-center justify-between text-[11px] text-amber-200/80 font-mono">
-          <span className="font-bold tracking-wider">AAWA ARTS FEST </span>
+          <span className="font-bold tracking-wider">AAWA ARTS FEST</span>
           <span className="text-[#caa02f] font-black flex items-center gap-1 tracking-wider">
             <Shield className="w-3.5 h-3.5" /> OFFICIAL
           </span>
@@ -355,126 +332,144 @@ const Convex3DCardContent = ({ event }: { event: any }) => {
 };
 
 // ==========================================
-// 🌊 INDIVIDUAL DYNAMIC 3D CURVE CARD
-// ==========================================
-const Dynamic3DCurveCard = ({ 
-  event, 
-  index, 
-  scrollX, 
-  cardTotalWidth,
-  viewportWidth
-}: { 
-  event: any; 
-  index: number; 
-  scrollX: MotionValue<number>; 
-  cardTotalWidth: number;
-  viewportWidth: number;
-}) => {
-  const initialX = index * cardTotalWidth;
-
-  // Relative distance from center of screen
-  const relativeX = useTransform(scrollX, (val) => {
-    const center = (viewportWidth / 2) - (cardTotalWidth / 2);
-    return val + initialX - center;
-  });
-
-  // Controlled 3D transforms to maintain absolute font sharpness
-  const z = useTransform(relativeX, [-1200, -800, -400, 0, 400, 800, 1200], [-180, -110, -25, 80, -25, -110, -180]);
-  const rotateY = useTransform(relativeX, [-1200, -800, -400, 0, 400, 800, 1200], [28, 20, 12, 0, -12, -20, -28]);
-  const scale = useTransform(relativeX, [-1200, -800, -400, 0, 400, 800, 1200], [0.88, 0.94, 0.98, 1.03, 0.98, 0.94, 0.88]);
-  const opacity = useTransform(relativeX, [-1300, -900, -500, 0, 500, 900, 1300], [0.05, 0.65, 0.92, 1, 0.92, 0.65, 0.05]);
-  const zIndex = useTransform(relativeX, (val) => Math.max(1, Math.round(60 - Math.abs(val) / 25)));
-
-  return (
-    <motion.div
-      className="shrink-0 w-[360px] sm:w-[390px] md:w-[410px]"
-      style={{
-        z,
-        rotateY,
-        scale,
-        opacity,
-        zIndex,
-        transformStyle: 'preserve-3d',
-        WebkitBackfaceVisibility: 'hidden',
-        backfaceVisibility: 'hidden',
-        willChange: 'transform',
-      }}
-    >
-      <Convex3DCardContent event={event} />
-    </motion.div>
-  );
-};
-
-// ==========================================
-// 🌊 CONTINUOUS 3D CURVED RUNWAY
+// 🌊 ULTRA-PERFORMANT 3D CONTINUOUS CURVED RUNWAY
+// Direct GPU Transform Engine (Runs at 60fps on Laptop & Vu webOS TV)
+// Zero React component re-renders per frame & 100% NaN-proof
 // ==========================================
 const Continuous3DCurvedRunway = ({ events }: { events: any[] }) => {
   const displayList = events.length > 0 ? events : SAMPLE_EVENTS;
   // Repeat 4x for smooth infinite loop
   const items = [...displayList, ...displayList, ...displayList, ...displayList];
 
-  const scrollX = useMotionValue(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
   const cardWidth = 410;
   const gap = 32;
   const cardTotalWidth = cardWidth + gap;
   const singleSetWidth = displayList.length * cardTotalWidth;
 
-  const [viewportWidth, setViewportWidth] = useState(1400);
-
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setViewportWidth(window.innerWidth);
-      const handleResize = () => setViewportWidth(window.innerWidth);
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
-    }
-  }, []);
+    let animFrameId: number;
+    let lastTime = 0;
+    let scrollOffset = 0;
+    const speed = 0.055; // pixels per millisecond (~55px/sec smooth continuous glide)
 
-  useAnimationFrame((_, delta) => {
-    if (singleSetWidth === 0) return;
-    // Continuous fluid motion (0.055 px per millisecond)
-    const speed = 0.055;
-    let nextX = scrollX.get() - speed * delta;
-    if (nextX <= -singleSetWidth) {
-      nextX += singleSetWidth;
-    }
-    scrollX.set(nextX);
-  });
+    const animate = (timestamp: number) => {
+      if (!lastTime) lastTime = timestamp;
+      const rawDelta = timestamp - lastTime;
+      lastTime = timestamp;
+
+      // Safe numeric delta: handles tab pause, backgrounding & TV frame-rate jitter
+      const delta = Number.isFinite(rawDelta) && rawDelta > 0 && rawDelta < 150 ? rawDelta : 16.67;
+
+      if (singleSetWidth > 0) {
+        scrollOffset -= speed * delta;
+        if (scrollOffset <= -singleSetWidth) {
+          scrollOffset += singleSetWidth;
+        }
+      }
+
+      const containerWidth = containerRef.current?.clientWidth || window.innerWidth || 1920;
+      const centerScreen = containerWidth / 2;
+
+      for (let i = 0; i < items.length; i++) {
+        const el = cardRefs.current[i];
+        if (!el) continue;
+
+        // Position of card center relative to screen center (dx)
+        const cardCenter = scrollOffset + (i * cardTotalWidth) + (cardWidth / 2);
+        const dx = cardCenter - centerScreen;
+        const absDx = Math.abs(dx);
+
+        // Hide cards that are far off-screen
+        if (absDx > containerWidth + 400) {
+          el.style.opacity = '0';
+          el.style.pointerEvents = 'none';
+          continue;
+        }
+
+        // 1. Z-Depth (Center pushed forward +95px, sides curve backward to -140px)
+        const normZ = Math.min(absDx / 750, 1.6);
+        const z = Number.isFinite(normZ) ? 95 - (normZ * normZ * 85) : 0;
+
+        // 2. 3D Y-Axis Rotation (Inward turn toward viewer)
+        const rawRotateY = -(dx / 32);
+        const rotateY = Number.isFinite(rawRotateY) ? Math.max(-28, Math.min(28, rawRotateY)) : 0;
+
+        // 3. Scale Curve (1.08x at center, smooth scale down to 0.80x at edges)
+        const rawScale = 1.08 - (absDx / 950) * 0.28;
+        const scale = Number.isFinite(rawScale) ? Math.max(0.78, rawScale) : 1;
+
+        // 4. Edge Fade Opacity
+        let opacity = 1;
+        if (absDx > 650) {
+          opacity = Math.max(0.05, 1 - (absDx - 650) / 450);
+        }
+        if (!Number.isFinite(opacity)) opacity = 1;
+
+        // 5. Z-Index Layering (Center card is highest)
+        const rawZIndex = Math.round(60 - absDx / 20);
+        const zIndex = Number.isFinite(rawZIndex) ? Math.max(1, rawZIndex) : 1;
+
+        // Direct hardware-accelerated transform update
+        el.style.transform = `translate3d(${dx.toFixed(1)}px, 0px, ${z.toFixed(1)}px) rotateY(${rotateY.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+        el.style.opacity = opacity.toFixed(3);
+        el.style.zIndex = String(zIndex);
+        el.style.pointerEvents = 'auto';
+      }
+
+      animFrameId = requestAnimationFrame(animate);
+    };
+
+    animFrameId = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(animFrameId);
+    };
+  }, [items.length, singleSetWidth, cardTotalWidth, cardWidth]);
 
   return (
     <div 
-      className="relative w-full h-[450px] flex items-center justify-center overflow-hidden select-none"
+      ref={containerRef}
+      className="relative w-full h-[470px] flex items-center justify-center overflow-hidden select-none"
       style={{
-        perspective: '1400px',
+        perspective: '1300px',
         perspectiveOrigin: '50% 50%',
       }}
     >
-      {/* 3D Track extending edge-to-edge */}
-      <motion.div 
-        className="flex gap-8 items-center h-full absolute left-0"
+      <div 
+        className="relative w-full h-full flex items-center justify-center pointer-events-none"
         style={{
-          x: scrollX,
           transformStyle: 'preserve-3d',
-          willChange: 'transform',
         }}
       >
         {items.map((event, i) => (
-          <Dynamic3DCurveCard 
-            key={`${event.id}-${i}`} 
-            event={event} 
-            index={i} 
-            scrollX={scrollX}
-            cardTotalWidth={cardTotalWidth}
-            viewportWidth={viewportWidth}
-          />
+          <div
+            key={`${event.id}-${i}`}
+            ref={(el) => { cardRefs.current[i] = el; }}
+            className="absolute shrink-0 w-[360px] sm:w-[390px] md:w-[410px]"
+            style={{
+              left: '50%',
+              top: '50%',
+              marginLeft: '-205px', // half of 410px card width
+              marginTop: '-185px', // half of card height
+              transformStyle: 'preserve-3d',
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden',
+              willChange: 'transform, opacity',
+            }}
+          >
+            <Convex3DCardContent event={event} />
+          </div>
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 };
 
 // ==========================================
-// 🏆 COMPACT TOP SCORES HUD (3 TEAMS: Hormuz, Aden, Zanzibar)
+// 🏆 COMPACT TOP SCORES HUD
 // ==========================================
 const TopScoresHUD = ({ 
   leaderboard, 
@@ -485,7 +480,7 @@ const TopScoresHUD = ({
 }) => {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center gap-3 bg-black/45 backdrop-blur-md px-5 py-2 rounded-2xl border border-white/20 shadow-md">
+      <div className="flex items-center gap-3 bg-black/50 backdrop-blur-md px-5 py-2 rounded-2xl border border-white/20 shadow-md">
         <Trophy className="w-4 h-4 text-[#f5d77f]" />
         <div className="flex items-center gap-4 divide-x divide-white/15">
           {leaderboard.slice(0, 3).map((team, idx) => (
@@ -502,7 +497,6 @@ const TopScoresHUD = ({
           ))}
         </div>
 
-        {/* Live Broadcast Indicator */}
         {isLiveBroadcastActive && (
           <div className="pl-3 border-l border-white/20 flex items-center gap-1.5 text-xs font-black uppercase text-amber-400 animate-pulse">
             <Radio className="w-3.5 h-3.5 text-red-500" />
@@ -529,9 +523,9 @@ const BroadcastCountdownOverlay = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex flex-col items-center justify-center select-none"
+      className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center select-none"
     >
-      <div className="absolute w-[600px] h-[600px] bg-[#caa02f]/20 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+      <div className="absolute w-[600px] h-[600px] bg-[#caa02f]/20 rounded-full blur-3xl pointer-events-none animate-pulse" />
 
       <motion.div 
         initial={{ y: -30, opacity: 0 }}
@@ -548,15 +542,15 @@ const BroadcastCountdownOverlay = ({
       </motion.div>
 
       <div className="relative flex items-center justify-center">
-        <div className="absolute w-64 h-64 md:w-80 md:h-80 rounded-full border-4 border-[#caa02f]/40 animate-ping"></div>
-        <div className="absolute w-52 h-52 md:w-64 md:h-64 rounded-full border-2 border-amber-300/30"></div>
+        <div className="absolute w-64 h-64 md:w-80 md:h-80 rounded-full border-4 border-[#caa02f]/40 animate-ping" />
+        <div className="absolute w-52 h-52 md:w-64 md:h-64 rounded-full border-2 border-amber-300/30" />
 
         <AnimatePresence mode="popLayout">
           <motion.div
             key={count}
-            initial={{ scale: 2.2, opacity: 0, filter: 'blur(10px)' }}
-            animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
-            exit={{ scale: 0.4, opacity: 0, filter: 'blur(15px)' }}
+            initial={{ scale: 2.2, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.4, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 350, damping: 25 }}
             className="w-44 h-44 md:w-56 md:h-56 rounded-full bg-gradient-to-br from-[#caa02f] via-amber-400 to-[#caa02f] flex items-center justify-center shadow-[0_0_80px_rgba(202,160,47,0.75)] border-4 border-white/70"
           >
@@ -615,7 +609,6 @@ const BroadcastStandingsOverlay = ({
           onClick={(e) => e.stopPropagation()}
           className="w-full max-w-5xl bg-gradient-to-br from-[#1c160a] via-[#0d0a04] to-[#181206] border-2 border-[#caa02f] rounded-[2.5rem] p-6 md:p-10 shadow-[0_0_80px_rgba(202,160,47,0.3)] relative overflow-hidden text-white flex flex-col justify-between"
         >
-          {/* Top Realtime Progress Bar */}
           {progressPercent !== null && (
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-black/60">
               <motion.div 
@@ -626,17 +619,15 @@ const BroadcastStandingsOverlay = ({
             </div>
           )}
 
-          {/* Background Grid Pattern */}
           <div 
             className="absolute inset-0 pointer-events-none opacity-20"
             style={{
-              backgroundImage: `radial-gradient(#caa02f 1.5px, transparent 1.5px)`,
-              backgroundSize: '20px 20px'
+              backgroundImage: 'radial-gradient(#caa02f 1.5px, transparent 1.5px)',
+              backgroundSize: '20px 20px',
             }}
           />
 
-          {/* Ambient Lighting Spots */}
-          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-48 bg-[#caa02f]/30 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-48 bg-[#caa02f]/30 rounded-full blur-3xl pointer-events-none" />
 
           {/* Modal Header */}
           <div className="flex items-center justify-between border-b border-[#caa02f]/30 pb-5 mb-8 relative z-10">
@@ -727,7 +718,6 @@ const BroadcastStandingsOverlay = ({
                     </div>
                   </div>
 
-                  {/* Section Breakdown Mini Bars */}
                   <div className="space-y-2 bg-black/50 p-4 rounded-2xl border border-white/10 text-xs font-mono">
                     <div className="flex justify-between items-center text-amber-100/80">
                       <span>Aliya Section</span>
@@ -747,9 +737,8 @@ const BroadcastStandingsOverlay = ({
             })}
           </div>
 
-          {/* Footer Info */}
           <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-4 text-xs text-amber-200/80 font-mono">
-            <span className="font-bold">AAWA ARTS FEST COMMITTEE</span>
+            <span className="font-bold">AAWA CENTRAL JURY TABULATION</span>
             <span className="text-[#caa02f] font-black tracking-wider">
               UPDATED IN REAL-TIME
             </span>
@@ -761,7 +750,7 @@ const BroadcastStandingsOverlay = ({
 };
 
 // ==========================================
-// 🚀 MAIN TV ARENA COMPONENT
+// 🚀 MAIN TV ARENA COMPONENT (DUAL LAPTOP & SMART TV COMPATIBLE)
 // ==========================================
 export default function TvScreenPage() {
   const [events, setEvents] = useState<any[]>(SAMPLE_EVENTS);
@@ -771,18 +760,15 @@ export default function TvScreenPage() {
     { id: '3', name: 'Zanzibar', color_hex: '#ef4444', points: 295, sections: { aliya: 110, foundation: 95, general: 90 } }
   ]);
 
-  // Broadcast Controller States
   const [broadcastState, setBroadcastState] = useState<BroadcastPayload | null>(null);
   const [broadcastPhase, setBroadcastPhase] = useState<'IDLE' | 'COUNTDOWN' | 'STANDINGS'>('IDLE');
   const [countdownNumber, setCountdownNumber] = useState<number>(3);
   const [durationRemaining, setDurationRemaining] = useState<number>(10);
 
-  // References to handle timers and deduplication
   const lastProcessedTriggerIdRef = useRef<string | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 1. Fetch live data (both results & broadcast state)
   const fetchData = async () => {
     try {
       const res = await fetch('/api/data?t=' + Date.now(), { cache: 'no-store' });
@@ -805,11 +791,10 @@ export default function TvScreenPage() {
         }
       }
     } catch (error) {
-      console.error('TV Page Data Fetch Error:', error);
+      console.warn('TV Page data fetch error:', error);
     }
   };
 
-  // 2. Clear all active broadcast countdown/display timers
   const clearAllBroadcastTimers = () => {
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
@@ -821,8 +806,8 @@ export default function TvScreenPage() {
     }
   };
 
-  // 3. Process incoming broadcast commands
   const handleIncomingBroadcast = (data: BroadcastPayload) => {
+    if (!data) return;
     setBroadcastState(data);
 
     if (data.status === 'HIDE' || data.status === 'IDLE') {
@@ -886,7 +871,6 @@ export default function TvScreenPage() {
     }
   };
 
-  // 4. Timer for standings display duration
   const startDurationTimer = (durationSecs: number) => {
     setDurationRemaining(durationSecs);
     let remaining = durationSecs;
@@ -905,85 +889,92 @@ export default function TvScreenPage() {
     }, 1000);
   };
 
-  // 5. Setup Supabase Realtime Listener + Polling Fallback
   useEffect(() => {
-    supabase
-      .from('site_assets')
-      .select('value')
-      .eq('key', 'tv_broadcast_control')
-      .single()
-      .then(({ data }) => {
-        if (data?.value) {
-          try {
-            const val = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
-            handleIncomingBroadcast(val);
-          } catch (e) {}
-        }
-      });
+    fetchData();
 
-    const channel = supabase
-      .channel('tv_screen_broadcast_listener')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'site_assets',
-          filter: 'key=eq.tv_broadcast_control'
-        },
-        (payload) => {
-          if (payload.new && (payload.new as any).value) {
-            try {
-              const rawVal = (payload.new as any).value;
-              const val = typeof rawVal === 'string' ? JSON.parse(rawVal) : rawVal;
-              handleIncomingBroadcast(val);
-            } catch (e) {
-              console.error('Realtime broadcast parse error:', e);
+    const fetchBroadcastAsset = async () => {
+      try {
+        const { data } = await supabase
+          .from('site_assets')
+          .select('value')
+          .eq('key', 'tv_broadcast_control')
+          .single();
+
+        if (data?.value) {
+          const val = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+          handleIncomingBroadcast(val);
+        }
+      } catch (e) {}
+    };
+    fetchBroadcastAsset();
+
+    let channel: any = null;
+    try {
+      channel = supabase
+        .channel('tv_screen_broadcast_listener')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'site_assets',
+            filter: 'key=eq.tv_broadcast_control'
+          },
+          (payload) => {
+            if (payload.new && (payload.new as any).value) {
+              try {
+                const rawVal = (payload.new as any).value;
+                const val = typeof rawVal === 'string' ? JSON.parse(rawVal) : rawVal;
+                handleIncomingBroadcast(val);
+              } catch (e) {}
             }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+    } catch (e) {}
 
-    fetchData();
-    const interval = setInterval(fetchData, 12000);
+    const interval = setInterval(fetchData, 10000);
 
     return () => {
       clearAllBroadcastTimers();
       clearInterval(interval);
-      supabase.removeChannel(channel);
+      if (channel) {
+        try {
+          supabase.removeChannel(channel);
+        } catch (e) {}
+      }
     };
   }, []);
 
   return (
-    <div className="h-screen w-screen overflow-hidden font-sans flex flex-col justify-between relative select-none bg-[radial-gradient(ellipse_at_top,#fffcf2_0%,#faedc8_40%,#caa02f_100%)] text-slate-900">
+    <div className="fixed inset-0 w-full h-full overflow-hidden font-sans flex flex-col justify-between select-none bg-[radial-gradient(ellipse_at_top,#fffcf2_0%,#faedc8_40%,#caa02f_100%)] text-slate-900 z-0">
       
       {/* Subtle Background Geometric Dots on Canvas */}
       <div 
         className="absolute inset-0 pointer-events-none opacity-20"
         style={{
-          backgroundImage: `radial-gradient(#b38617 1px, transparent 1px)`,
-          backgroundSize: '24px 24px'
+          backgroundImage: 'radial-gradient(#b38617 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
         }}
       />
 
       {/* Ambient Canvas Lighting Glows */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/40 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-amber-400/25 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/40 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-amber-400/25 rounded-full blur-3xl pointer-events-none" />
 
       {/* 1. TOP BAR */}
-      <header className="h-[12vh] flex items-center justify-between px-8 border-b border-black/10 bg-white/40 backdrop-blur-md z-40 shadow-sm relative">
+      <header className="h-[12vh] min-h-[75px] flex items-center justify-between px-8 border-b border-black/10 bg-white/50 backdrop-blur-md z-40 shadow-sm relative shrink-0">
         <div className="flex items-center gap-6">
           <img
             src="/Logo_White.png"
             alt="AAWA Fest Logo"
-            className="h-16 w-auto object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
+            className="h-14 md:h-16 w-auto object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]"
             onError={(e: any) => { e.target.style.display = 'none'; }}
           />
           <div className="h-10 w-px bg-black/15"></div>
           <div>
             <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-950 flex items-center gap-3">
-              AAWA LIVE RESULTS
+              AAWA LIVE ARENA
               <span className="text-xs px-2.5 py-0.5 rounded-full bg-black text-[#caa02f] font-black uppercase flex items-center gap-1.5 shadow-sm">
                 <Radio className="w-3 h-3 text-red-500 animate-pulse" /> Live
               </span>
@@ -1004,13 +995,13 @@ export default function TvScreenPage() {
         </div>
       </header>
 
-      {/* 2. MAIN 3D CONTINUOUS CURVED RUNWAY (Razor-sharp text & tied positions support) */}
+      {/* 2. MAIN 3D CONTINUOUS CURVED RUNWAY (Direct GPU Hardware Acceleration) */}
       <main className="flex-1 flex flex-col justify-center items-center w-full relative z-10 px-0 overflow-hidden">
         <Continuous3DCurvedRunway events={events} />
       </main>
 
       {/* 3. BOTTOM NOTIFICATION MARQUEE */}
-      <footer className="h-[6vh] bg-black text-[#fce8a6] flex items-center overflow-hidden relative z-40 border-t-2 border-[#caa02f] shadow-2xl">
+      <footer className="h-[6vh] min-h-[40px] bg-black text-[#fce8a6] flex items-center overflow-hidden relative z-40 border-t-2 border-[#caa02f] shadow-2xl shrink-0">
         <div className="bg-[#caa02f] text-black h-full px-6 flex items-center gap-2 z-20 skew-x-[-12deg] -ml-4 shadow-lg">
           <Zap className="w-4 h-4 text-black animate-pulse skew-x-[12deg]" />
           <span className="font-black uppercase tracking-widest text-xs skew-x-[12deg]">
@@ -1026,13 +1017,13 @@ export default function TvScreenPage() {
           {[...LIVE_UPDATES, ...LIVE_UPDATES, ...LIVE_UPDATES].map((txt, i) => (
             <span key={i} className="text-[#fce8a6] font-bold text-xs uppercase flex items-center gap-4 tracking-wider">
               {txt}
-              <span className="w-2 h-2 bg-[#caa02f] rounded-full shadow-[0_0_8px_#caa02f]"></span>
+              <span className="w-2 h-2 bg-[#caa02f] rounded-full shadow-[0_0_8px_#caa02f]" />
             </span>
           ))}
         </motion.div>
       </footer>
 
-      {/* 4. BROADCAST COUNTDOWN OVERLAY (Admin Dashboard Triggered) */}
+      {/* 4. BROADCAST COUNTDOWN OVERLAY */}
       <AnimatePresence>
         {broadcastPhase === 'COUNTDOWN' && (
           <BroadcastCountdownOverlay 
@@ -1042,7 +1033,7 @@ export default function TvScreenPage() {
         )}
       </AnimatePresence>
 
-      {/* 5. BROADCAST STANDINGS OVERLAY (Admin Dashboard Triggered) */}
+      {/* 5. BROADCAST STANDINGS OVERLAY */}
       <BroadcastStandingsOverlay 
         isOpen={broadcastPhase === 'STANDINGS'} 
         onClose={() => {
