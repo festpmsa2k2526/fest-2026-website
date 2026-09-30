@@ -1,18 +1,12 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
-const DEFAULT_SUPABASE_URL = "https://xsoifeyivoybqzruaguu.supabase.co";
-const DEFAULT_SUPABASE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhzb2lmZXlpdm95YnF6cnVhZ3V1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDI1NTQ1NiwiZXhwIjoyMDc5ODMxNDU2fQ.vCYTFn59Kz8S5qYPCKbMgOCjm6R02QhiN1GV36t33n0";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL;
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  DEFAULT_SUPABASE_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://xsoifeyivoybqzruaguu.supabase.co";
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhzb2lmZXlpdm95YnF6cnVhZ3V1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDI1NTQ1NiwiZXhwIjoyMDc5ODMxNDU2fQ.vCYTFn59Kz8S5qYPCKbMgOCjm6R02QhiN1GV36t33n0";
 
 const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: false, autoRefreshToken: false }
@@ -20,139 +14,171 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 
 export async function GET() {
   try {
-    const [teamsRes, eventsRes, participationsRes] = await Promise.all([
-      supabase.from('teams').select('*').order('name'),
-      supabase.from('events').select('*').order('name'),
-      supabase.from('participations').select(`
-        id, event_id, team_id, student_id, result_position, performance_grade, points_earned, status,
-        students ( id, name, chest_no, section, class_grade ),
-        teams ( id, name, slug, color_hex ),
-        events ( id, name, event_code, category, grade_type, applicable_section )
-      `)
+    const [teamsRes, eventsRes, studentsRes, participationsRes, assetsRes] = await Promise.all([
+      supabase.from("teams").select("id, name, slug, color_hex, penalty_points").order("name"),
+      supabase.from("events").select("id, name, event_code, category, grade_type, applicable_section").order("name"),
+      supabase.from("students").select("id, name, chest_no, section, class_grade, team_id"),
+      supabase.from("participations").select("id, event_id, student_id, team_id, result_position, performance_grade, points_earned, status, attendance_status, code_letter"),
+      supabase.from("site_assets").select("key, value")
     ]);
 
     const rawTeams = teamsRes.data || [];
     const rawEvents = eventsRes.data || [];
-    const rawParts = participationsRes.data || [];
+    const rawStudents = studentsRes.data || [];
+    const rawParticipations = participationsRes.data || [];
+    const rawAssets = assetsRes.data || [];
 
-    const SECTIONS = ['Aliya', 'Foundation', 'General', 'Foundation General'];
-    const CATEGORIES = ['ON STAGE', 'OFF STAGE'];
+    const eventMap = new Map(rawEvents.map(e => [e.id, e]));
+    const studentMap = new Map(rawStudents.map(s => [s.id, s]));
+    const teamMap = new Map(rawTeams.map(t => [t.id, t]));
 
-    const teamMap: Record<string, any> = {};
+    // 1. Calculate Team Scores & Breakdowns
+    const teamStats: Record<string, {
+      id: string;
+      name: string;
+      slug: string;
+      color_hex: string;
+      penalty_points: number;
+      points: number;
+      net_points: number;
+      sections: { aliya: number; foundation: number; general: number };
+      categories: { onStage: number; offStage: number };
+    }> = {};
+
     rawTeams.forEach(t => {
-      teamMap[t.id] = {
+      teamStats[t.id] = {
         id: t.id,
         name: t.name,
-        slug: t.slug || t.name,
-        color_hex: t.color_hex || '#caa02f',
-        penalty_points: t.penalty_points || 0,
-        total_points: 0,
+        slug: t.slug || t.id,
+        color_hex: t.color_hex || "#caa02f",
+        penalty_points: Number(t.penalty_points) || 0,
+        points: 0,
         net_points: 0,
-        section_points: {
-          'Aliya': 0,
-          'Foundation': 0,
-          'General': 0,
-          'Foundation General': 0
-        },
-        category_points: {
-          'ON STAGE': 0,
-          'OFF STAGE': 0
-        }
+        sections: { aliya: 0, foundation: 0, general: 0 },
+        categories: { onStage: 0, offStage: 0 }
       };
     });
 
-    rawParts.forEach((p: any) => {
-      const tid = p.team_id;
-      if (!tid || !teamMap[tid]) return;
-
+    rawParticipations.forEach(p => {
+      const teamId = p.team_id;
+      if (!teamId || !teamStats[teamId]) return;
       const pts = Number(p.points_earned) || 0;
-      if (pts > 0) {
-        teamMap[tid].total_points += pts;
+      if (pts <= 0) return;
 
-        // Determine Section
-        const evSections: string[] = Array.isArray(p.events?.applicable_section) 
-          ? p.events.applicable_section 
-          : (p.events?.applicable_section ? [p.events.applicable_section] : []);
+      teamStats[teamId].points += pts;
 
-        if (evSections.includes('Foundation General')) {
-          teamMap[tid].section_points['Foundation General'] += pts;
-        } else if (evSections.includes('General')) {
-          teamMap[tid].section_points['General'] += pts;
-        } else if (evSections.includes('Foundation')) {
-          teamMap[tid].section_points['Foundation'] += pts;
-        } else if (evSections.includes('Aliya')) {
-          teamMap[tid].section_points['Aliya'] += pts;
-        } else if (p.students?.section === 'Foundation') {
-          teamMap[tid].section_points['Foundation'] += pts;
-        } else if (p.students?.section === 'Aliya') {
-          teamMap[tid].section_points['Aliya'] += pts;
+      const ev = eventMap.get(p.event_id);
+      if (ev) {
+        // Section Breakdown
+        const sections = Array.isArray(ev.applicable_section) ? ev.applicable_section : [ev.applicable_section];
+        const secStr = sections.join(" ").toLowerCase();
+
+        if (secStr.includes("general")) {
+          teamStats[teamId].sections.general += pts;
+        } else if (secStr.includes("foundation")) {
+          teamStats[teamId].sections.foundation += pts;
+        } else if (secStr.includes("aliya")) {
+          teamStats[teamId].sections.aliya += pts;
         } else {
-          teamMap[tid].section_points['General'] += pts;
+          teamStats[teamId].sections.general += pts;
         }
 
-        // Determine Category (ON STAGE vs OFF STAGE)
-        const cat = p.events?.category || 'OFF STAGE';
-        if (teamMap[tid].category_points[cat] !== undefined) {
-          teamMap[tid].category_points[cat] += pts;
+        // Category Breakdown (On Stage / Off Stage)
+        const cat = (ev.category || "").toUpperCase();
+        if (cat.includes("ON")) {
+          teamStats[teamId].categories.onStage += pts;
+        } else if (cat.includes("OFF")) {
+          teamStats[teamId].categories.offStage += pts;
         }
       }
     });
 
-    // Calculate net points & sort
-    const teamStandings = Object.values(teamMap).map((t: any) => ({
-      ...t,
-      net_points: Math.max(0, t.total_points - t.penalty_points)
-    })).sort((a: any, b: any) => b.total_points - a.total_points);
+    Object.values(teamStats).forEach(t => {
+      t.net_points = Math.max(0, t.points - t.penalty_points);
+    });
 
-    // Group completed event results
-    const posNumMap: Record<string, number> = { 'FIRST': 1, 'SECOND': 2, 'THIRD': 3 };
-    const groupedEvents: Record<string, any> = {};
+    const teamsLeaderboard = Object.values(teamStats).sort((a, b) => b.points - a.points);
 
-    rawParts.forEach((p: any) => {
+    // 2. Format Event Results & Winners
+    const groupedResults: Record<string, {
+      id: string;
+      eventName: string;
+      event_code: string;
+      category: string;
+      section: string;
+      grade_type: string;
+      winners: Array<{
+        pos: number;
+        posLabel: string;
+        name: string;
+        chest_no?: string | null;
+        teamId: string;
+        teamName: string;
+        teamColor: string;
+        grade: string | null;
+        points: number;
+      }>;
+    }> = {};
+
+    rawParticipations.forEach(p => {
       if (!p.result_position && (!p.performance_grade || p.performance_grade === 'NONE')) return;
-
-      const ev = p.events;
+      const ev = eventMap.get(p.event_id);
       if (!ev) return;
 
-      if (!groupedEvents[ev.id]) {
-        const evSecs = Array.isArray(ev.applicable_section) 
-          ? ev.applicable_section.join(', ') 
-          : (ev.applicable_section || 'General');
+      if (!groupedResults[ev.id]) {
+        let secDisplay = "General";
+        if (ev.applicable_section) {
+          const arr = Array.isArray(ev.applicable_section) ? ev.applicable_section : [ev.applicable_section];
+          secDisplay = arr.join(", ");
+        }
 
-        groupedEvents[ev.id] = {
+        groupedResults[ev.id] = {
           id: ev.id,
           eventName: ev.name,
-          eventCode: ev.event_code || '---',
-          category: ev.category || 'OFF STAGE',
-          gradeType: ev.grade_type || 'A',
-          section: evSecs,
-          isGroup: ev.grade_type === 'C',
+          event_code: ev.event_code || "",
+          category: ev.category || "ON STAGE",
+          section: secDisplay,
+          grade_type: ev.grade_type || "A",
           winners: []
         };
       }
 
-      const posNum = p.result_position ? (posNumMap[p.result_position] || 0) : 0;
-      const studentName = p.students?.name || (p.student_id ? 'Unknown' : (p.teams?.name ? `Team ${p.teams.name}` : 'Team Event'));
-      const chestNo = p.students?.chest_no || '-';
-      const teamName = p.teams?.name || 'Unknown Team';
-      const teamColor = p.teams?.color_hex || teamMap[p.team_id]?.color_hex || '#caa02f';
+      let posNum = 0;
+      if (p.result_position === "FIRST") posNum = 1;
+      else if (p.result_position === "SECOND") posNum = 2;
+      else if (p.result_position === "THIRD") posNum = 3;
 
-      groupedEvents[ev.id].winners.push({
-        id: p.id,
+      let winnerName = "Team Entry";
+      let chestNo = null;
+
+      if (p.student_id) {
+        const st = studentMap.get(p.student_id);
+        if (st) {
+          winnerName = st.name;
+          chestNo = st.chest_no;
+        }
+      } else if (p.team_id) {
+        const tm = teamMap.get(p.team_id);
+        if (tm) winnerName = tm.name;
+      }
+
+      const tm = teamMap.get(p.team_id);
+
+      groupedResults[ev.id].winners.push({
         pos: posNum,
-        posText: p.result_position || '-',
-        name: studentName,
-        chestNo: chestNo,
+        posLabel: p.result_position || "PARTICIPANT",
+        name: winnerName,
+        chest_no: chestNo,
         teamId: p.team_id,
-        teamName: teamName,
-        teamColor: teamColor,
-        grade: p.performance_grade && p.performance_grade !== 'NONE' ? p.performance_grade : '-',
+        teamName: tm?.name || "Unknown Team",
+        teamColor: tm?.color_hex || "#caa02f",
+        grade: p.performance_grade && p.performance_grade !== "NONE" ? p.performance_grade : null,
         points: Number(p.points_earned) || 0
       });
     });
 
-    const eventResults = Object.values(groupedEvents).map((ev: any) => {
-      ev.winners.sort((a: any, b: any) => {
+    const eventsWithResults = Object.values(groupedResults).map(ev => {
+      ev.winners.sort((a, b) => {
         if (a.pos > 0 && b.pos > 0) return a.pos - b.pos;
         if (a.pos > 0) return -1;
         if (b.pos > 0) return 1;
@@ -161,20 +187,53 @@ export async function GET() {
       return ev;
     });
 
+    // Sort events: alphabetical
+    eventsWithResults.sort((a, b) => a.eventName.localeCompare(b.eventName));
+
+    // 3. Category Breakdown Table Data
+    const categoryBreakdown = teamsLeaderboard.map(t => ({
+      id: t.id,
+      name: t.name,
+      slug: t.slug,
+      color: t.color_hex,
+      stats: {
+        aliya: t.sections.aliya,
+        foundation: t.sections.foundation,
+        general: t.sections.general,
+        onStage: t.categories.onStage,
+        offStage: t.categories.offStage,
+        total: t.points
+      }
+    }));
+
+    // 4. TV Broadcast Controls from site_assets
+    const broadcastAsset = rawAssets.find(a => a.key === "tv_broadcast_control");
+    let broadcastState = null;
+    if (broadcastAsset?.value) {
+      try {
+        broadcastState = typeof broadcastAsset.value === "string" ? JSON.parse(broadcastAsset.value) : broadcastAsset.value;
+      } catch (e) {
+        broadcastState = null;
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      teams: teamStandings,
-      events: eventResults,
-      sections: SECTIONS,
-      categories: CATEGORIES,
+      teams: teamsLeaderboard,
+      events: eventsWithResults,
+      breakdown: categoryBreakdown,
+      broadcast: broadcastState,
+      totalCount: eventsWithResults.length,
       lastUpdated: new Date().toISOString()
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
-
-  } catch (error: any) {
-    console.error('Error fetching live data:', error);
-    return NextResponse.json(
-      { success: false, error: error.message || 'Failed to fetch live data' },
-      { status: 500 }
-    );
+  } catch (err: any) {
+    console.error("API /api/data error:", err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }

@@ -1,28 +1,21 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const DEFAULT_SUPABASE_URL = "https://xsoifeyivoybqzruaguu.supabase.co";
-const DEFAULT_SUPABASE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhzb2lmZXlpdm95YnF6cnVhZ3V1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDI1NTQ1NiwiZXhwIjoyMDc5ODMxNDU2fQ.vCYTFn59Kz8S5qYPCKbMgOCjm6R02QhiN1GV36t33n0";
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_SUPABASE_URL;
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  DEFAULT_SUPABASE_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://xsoifeyivoybqzruaguu.supabase.co";
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhzb2lmZXlpdm95YnF6cnVhZ3V1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDI1NTQ1NiwiZXhwIjoyMDc5ODMxNDU2fQ.vCYTFn59Kz8S5qYPCKbMgOCjm6R02QhiN1GV36t33n0";
 
 const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: false, autoRefreshToken: false }
 });
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-export const fetchCache = 'force-no-store';
-
 export async function GET() {
   try {
     const [teamsRes, eventsRes, studentsRes, participationsRes, assetsRes] = await Promise.all([
-      supabase.from("teams").select("id, name, slug, color_hex").order("name"),
+      supabase.from("teams").select("id, name, slug, color_hex, penalty_points").order("name"),
       supabase.from("events").select("id, name, event_code, category, grade_type, applicable_section").order("name"),
       supabase.from("students").select("id, name, chest_no, section, class_grade, team_id"),
       supabase.from("participations").select("id, event_id, student_id, team_id, result_position, performance_grade, points_earned, status, attendance_status, code_letter"),
@@ -45,7 +38,9 @@ export async function GET() {
       name: string;
       slug: string;
       color_hex: string;
+      penalty_points: number;
       points: number;
+      net_points: number;
       sections: { aliya: number; foundation: number; general: number };
       categories: { onStage: number; offStage: number };
     }> = {};
@@ -56,7 +51,9 @@ export async function GET() {
         name: t.name,
         slug: t.slug || t.id,
         color_hex: t.color_hex || "#caa02f",
+        penalty_points: Number(t.penalty_points) || 0,
         points: 0,
+        net_points: 0,
         sections: { aliya: 0, foundation: 0, general: 0 },
         categories: { onStage: 0, offStage: 0 }
       };
@@ -96,6 +93,10 @@ export async function GET() {
       }
     });
 
+    Object.values(teamStats).forEach(t => {
+      t.net_points = Math.max(0, t.points - t.penalty_points);
+    });
+
     const teamsLeaderboard = Object.values(teamStats).sort((a, b) => b.points - a.points);
 
     // 2. Format Event Results & Winners
@@ -120,7 +121,7 @@ export async function GET() {
     }> = {};
 
     rawParticipations.forEach(p => {
-      if (!p.result_position) return;
+      if (!p.result_position && (!p.performance_grade || p.performance_grade === 'NONE')) return;
       const ev = eventMap.get(p.event_id);
       if (!ev) return;
 
@@ -142,8 +143,9 @@ export async function GET() {
         };
       }
 
-      let posNum = 1;
-      if (p.result_position === "SECOND") posNum = 2;
+      let posNum = 0;
+      if (p.result_position === "FIRST") posNum = 1;
+      else if (p.result_position === "SECOND") posNum = 2;
       else if (p.result_position === "THIRD") posNum = 3;
 
       let winnerName = "Team Entry";
@@ -164,7 +166,7 @@ export async function GET() {
 
       groupedResults[ev.id].winners.push({
         pos: posNum,
-        posLabel: p.result_position,
+        posLabel: p.result_position || "PARTICIPANT",
         name: winnerName,
         chest_no: chestNo,
         teamId: p.team_id,
@@ -176,7 +178,12 @@ export async function GET() {
     });
 
     const eventsWithResults = Object.values(groupedResults).map(ev => {
-      ev.winners.sort((a, b) => a.pos - b.pos);
+      ev.winners.sort((a, b) => {
+        if (a.pos > 0 && b.pos > 0) return a.pos - b.pos;
+        if (a.pos > 0) return -1;
+        if (b.pos > 0) return 1;
+        return b.points - a.points;
+      });
       return ev;
     });
 
@@ -216,12 +223,13 @@ export async function GET() {
       events: eventsWithResults,
       breakdown: categoryBreakdown,
       broadcast: broadcastState,
+      totalCount: eventsWithResults.length,
       lastUpdated: new Date().toISOString()
     }, {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0',
-        'CDN-Cache-Control': 'no-store',
-        'Vercel-CDN-Cache-Control': 'no-store'
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       }
     });
   } catch (err: any) {
