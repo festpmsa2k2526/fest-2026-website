@@ -24,12 +24,9 @@ const LIVE_UPDATES = [
 
 // Curated High-Performance Default Highlights (Instant 0ms Load)
 const DEFAULT_HIGHLIGHTS = [
-  "https://kommodo.ai/i/sbchfxN0QC8MMTWRmUV4",
-  "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=800&q=80"
+  "https://res.cloudinary.com/x5ocehba/image/upload/v1790772243/NJHH_dohpap.jpg",
+  "https://res.cloudinary.com/x5ocehba/image/upload/v1790772242/dfgfcht_k9oz7z.jpg",
+  "https://res.cloudinary.com/x5ocehba/image/upload/v1790772242/sfsdgdhdf_rx9aaa.jpg"
 ];
 
 // Committee List
@@ -51,12 +48,11 @@ const COMMITTEE = [
   { role: "Event Manager", name: "Muhammed Shanil", image: "" },
 ];
 
-// Map Database Slugs (GR1, GR2...) to UI Gradients
+// Map Database Slugs (GRA, GR2, GR3) to UI Gradients
 const TEAM_GRADIENTS: Record<string, string> = {
-  'GR1': "from-blue-500 to-indigo-600",       // Hormuz
-  'GR2': "from-emerald-500 to-teal-600",      // Aden
-  'GR3': "from-rose-500 to-red-600",          // Zanzibar
-  'GR4': "from-[#caa02f] to-amber-600",       // Malacca
+  'GRA': "from-emerald-500 to-teal-700",      // FUSTAT (#10b981)
+  'GR2': "from-amber-500 to-yellow-600",      // GULBARGA (#f59e0b)
+  'GR3': "from-rose-500 to-red-700",          // ISHBILIYA (#ef4444)
 };
 
 // --- UTILITY COMPONENTS ---

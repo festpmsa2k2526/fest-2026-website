@@ -49,9 +49,9 @@ interface EventItem {
 const SECTIONS = ['All', 'Aliya', 'Foundation', 'General', 'On Stage', 'Off Stage'];
 const HOUSES = [
   { name: 'All Houses', color: '#caa02f' },
-  { name: 'Hormuz', color: '#2563eb' },
-  { name: 'Aden', color: '#10b981' },
-  { name: 'Zanzibar', color: '#ef4444' }
+  { name: 'FUSTAT', color: '#10b981' },
+  { name: 'GULBARGA', color: '#f59e0b' },
+  { name: 'ISHBILIYA', color: '#ef4444' }
 ];
 
 const SAMPLE_EVENTS: EventItem[] = [

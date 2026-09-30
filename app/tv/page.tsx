@@ -24,76 +24,51 @@ interface BroadcastPayload {
 const SAMPLE_EVENTS = [
   {
     id: "sample-1",
-    eventName: "Elocution English (Aliya)",
-    event_code: "EL-EN-01",
-    category: "ON STAGE",
+    eventName: "BOOK REVIEW",
+    event_code: "ALN059",
+    category: "OFF STAGE",
     section: "Aliya",
     winners: [
-      { pos: 1, name: "Muhammed Sinan", chest_no: "104", teamName: "Hormuz", teamColor: "#2563eb", grade: "A+", points: 15 },
-      { pos: 1, name: "Ahmad Raees", chest_no: "212", teamName: "Aden", teamColor: "#10b981", grade: "A+", points: 15 },
-      { pos: 2, name: "Ibrahim Waseem", chest_no: "305", teamName: "Zanzibar", teamColor: "#ef4444", grade: "A", points: 10 },
-      { pos: 3, name: "Sayyid Adil", chest_no: "109", teamName: "Hormuz", teamColor: "#2563eb", grade: "B", points: 6 },
+      { pos: 1, name: "AMJAD MK", chest_no: "111", teamName: "ISHBILIYA", teamColor: "#ef4444", grade: "A", points: 17 },
+      { pos: 2, name: "ADHIL SALI", chest_no: "102", teamName: "FUSTAT", teamColor: "#10b981", grade: "B", points: 11 },
+      { pos: 3, name: "MOHAMMED SHAMNAD P", chest_no: "202", teamName: "GULBARGA", teamColor: "#f59e0b", grade: "C", points: 4 },
+      { pos: 3, name: "VASEEM KM", chest_no: "323", teamName: "GULBARGA", teamColor: "#f59e0b", grade: "C", points: 4 },
     ]
   },
   {
     id: "sample-2",
-    eventName: "Classical Arabic Calligraphy",
-    event_code: "AR-CL-04",
+    eventName: "CALLIGRAPHY",
+    event_code: "ALF076",
     category: "OFF STAGE",
-    section: "Foundation",
+    section: "Aliya",
     winners: [
-      { pos: 1, name: "Faisal Salih", chest_no: "318", teamName: "Zanzibar", teamColor: "#ef4444", grade: "A+", points: 12 },
-      { pos: 2, name: "Sayyid Adil", chest_no: "109", teamName: "Hormuz", teamColor: "#2563eb", grade: "A", points: 8 },
-      { pos: 3, name: "Nabeel Ishaq", chest_no: "220", teamName: "Aden", teamColor: "#10b981", grade: "A", points: 5 },
+      { pos: 1, name: "MOHAMMED SUFIYAN PM", chest_no: "205", teamName: "GULBARGA", teamColor: "#f59e0b", grade: "B", points: 13 },
+      { pos: 2, name: "MUHANMED FEZBIN P", chest_no: "311", teamName: "ISHBILIYA", teamColor: "#ef4444", grade: "B", points: 9 },
+      { pos: 3, name: "MUHAMMED SINAN TP", chest_no: "308", teamName: "ISHBILIYA", teamColor: "#ef4444", grade: null, points: 3 },
     ]
   },
   {
     id: "sample-3",
-    eventName: "Grand Mashup Musicale",
-    event_code: "MU-GR-09",
-    category: "ON STAGE",
+    eventName: "ESSAY URD",
+    event_code: "GEF091",
+    category: "OFF STAGE",
     section: "General",
     winners: [
-      { pos: 1, name: "Team Aden Ensemble", chest_no: null, teamName: "Aden", teamColor: "#10b981", grade: "A+", points: 25 },
-      { pos: 2, name: "Hormuz Symphony", chest_no: null, teamName: "Hormuz", teamColor: "#2563eb", grade: "A", points: 18 },
-      { pos: 3, name: "Zanzibar Vocalists", chest_no: null, teamName: "Zanzibar", teamColor: "#ef4444", grade: "A", points: 12 },
+      { pos: 1, name: "AHMAD SHAMEEM V", chest_no: "107", teamName: "GULBARGA", teamColor: "#f59e0b", grade: "A", points: 17 },
+      { pos: 2, name: "MUHAMMAD SHAHAD KP", chest_no: "208", teamName: "FUSTAT", teamColor: "#10b981", grade: "B", points: 11 },
+      { pos: 3, name: "MUHAMMED SADIQ", chest_no: "220", teamName: "FUSTAT", teamColor: "#10b981", grade: "B", points: 6 },
     ]
   },
   {
     id: "sample-4",
-    eventName: "Parliamentary Debate",
-    event_code: "DB-SE-02",
-    category: "ON STAGE",
-    section: "Aliya",
-    winners: [
-      { pos: 1, name: "Hanoon & Team", chest_no: "115", teamName: "Hormuz", teamColor: "#2563eb", grade: "A+", points: 20 },
-      { pos: 2, name: "Faheem & Team", chest_no: "324", teamName: "Zanzibar", teamColor: "#ef4444", grade: "A", points: 14 },
-      { pos: 2, name: "Shuhaib & Team", chest_no: "231", teamName: "Aden", teamColor: "#10b981", grade: "A", points: 14 },
-      { pos: 3, name: "Ishaq PC", chest_no: "311", teamName: "Zanzibar", teamColor: "#ef4444", grade: "B", points: 8 },
-    ]
-  },
-  {
-    id: "sample-5",
-    eventName: "Spot Poetry Writing",
-    event_code: "PT-FD-07",
+    eventName: "HAIKU POEM",
+    event_code: "ALF082",
     category: "OFF STAGE",
-    section: "Foundation",
-    winners: [
-      { pos: 1, name: "Minhaj PV", chest_no: "216", teamName: "Aden", teamColor: "#10b981", grade: "A+", points: 10 },
-      { pos: 2, name: "Ziyad Hussain", chest_no: "108", teamName: "Hormuz", teamColor: "#2563eb", grade: "A", points: 6 },
-      { pos: 3, name: "Shemeem EC", chest_no: "329", teamName: "Zanzibar", teamColor: "#ef4444", grade: "B", points: 3 },
-    ]
-  },
-  {
-    id: "sample-6",
-    eventName: "Urdu Ghazal Rendering",
-    event_code: "GZ-UR-11",
-    category: "ON STAGE",
     section: "Aliya",
     winners: [
-      { pos: 1, name: "Ahmad Raees", chest_no: "212", teamName: "Aden", teamColor: "#10b981", grade: "A+", points: 15 },
-      { pos: 2, name: "Muhammed Sinan", chest_no: "104", teamName: "Hormuz", teamColor: "#2563eb", grade: "A", points: 10 },
-      { pos: 3, name: "Ishaq PC", chest_no: "311", teamName: "Zanzibar", teamColor: "#ef4444", grade: "A", points: 6 },
+      { pos: 1, name: "MUHAMMAD SHAHAD KP", chest_no: "208", teamName: "FUSTAT", teamColor: "#10b981", grade: "A+", points: 17 },
+      { pos: 2, name: "MUHAMMED RASHID", chest_no: "218", teamName: "ISHBILIYA", teamColor: "#ef4444", grade: "A", points: 11 },
+      { pos: 3, name: "MOHAMMED FAHEEM PV", chest_no: "121", teamName: "GULBARGA", teamColor: "#f59e0b", grade: "A", points: 8 },
     ]
   }
 ];
@@ -752,9 +727,9 @@ const BroadcastStandingsOverlay = ({
 export default function TvScreenPage() {
   const [events, setEvents] = useState<any[]>(SAMPLE_EVENTS);
   const [leaderboard, setLeaderboard] = useState<any[]>([
-    { id: '1', name: 'Hormuz', color_hex: '#2563eb', points: 342, sections: { aliya: 140, foundation: 112, general: 90 } },
-    { id: '2', name: 'Aden', color_hex: '#10b981', points: 328, sections: { aliya: 130, foundation: 108, general: 90 } },
-    { id: '3', name: 'Zanzibar', color_hex: '#ef4444', points: 295, sections: { aliya: 110, foundation: 95, general: 90 } }
+    { id: '1', name: 'FUSTAT', color_hex: '#10b981', points: 235, sections: { aliya: 130, foundation: 64, general: 41 } },
+    { id: '2', name: 'GULBARGA', color_hex: '#f59e0b', points: 188, sections: { aliya: 128, foundation: 43, general: 17 } },
+    { id: '3', name: 'ISHBILIYA', color_hex: '#ef4444', points: 177, sections: { aliya: 114, foundation: 57, general: 6 } }
   ]);
 
   // Broadcast Controller States
