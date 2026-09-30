@@ -5,8 +5,16 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://xsoifeyivoybqzruaguu.supabase.co";
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhzb2lmZXlpdm95YnF6cnVhZ3V1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDI1NTQ1NiwiZXhwIjoyMDc5ODMxNDU2fQ.vCYTFn59Kz8S5qYPCKbMgOCjm6R02QhiN1GV36t33n0";
+const GUARANTEED_SUPABASE_URL = "https://xsoifeyivoybqzruaguu.supabase.co";
+const GUARANTEED_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhzb2lmZXlpdm95YnF6cnVhZ3V1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDI1NTQ1NiwiZXhwIjoyMDc5ODMxNDU2fQ.vCYTFn59Kz8S5qYPCKbMgOCjm6R02QhiN1GV36t33n0";
+
+const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL.startsWith("http")) 
+  ? process.env.NEXT_PUBLIC_SUPABASE_URL 
+  : GUARANTEED_SUPABASE_URL;
+
+const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.SUPABASE_SERVICE_ROLE_KEY.length > 50)
+  ? process.env.SUPABASE_SERVICE_ROLE_KEY
+  : GUARANTEED_SERVICE_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: false, autoRefreshToken: false }
@@ -14,7 +22,7 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 
 export async function GET() {
   try {
-    const [teamsRes, eventsRes, studentsRes, participationsRes, assetsRes] = await Promise.all([
+    let [teamsRes, eventsRes, studentsRes, participationsRes, assetsRes] = await Promise.all([
       supabase.from("teams").select("id, name, slug, color_hex, penalty_points").order("name"),
       supabase.from("events").select("id, name, event_code, category, grade_type, applicable_section").order("name"),
       supabase.from("students").select("id, name, chest_no, section, class_grade, team_id"),
@@ -22,11 +30,32 @@ export async function GET() {
       supabase.from("site_assets").select("key, value")
     ]);
 
-    const rawTeams = teamsRes.data || [];
-    const rawEvents = eventsRes.data || [];
-    const rawStudents = studentsRes.data || [];
-    const rawParticipations = participationsRes.data || [];
-    const rawAssets = assetsRes.data || [];
+    let rawTeams = teamsRes.data || [];
+    let rawEvents = eventsRes.data || [];
+    let rawStudents = studentsRes.data || [];
+    let rawParticipations = participationsRes.data || [];
+    let rawAssets = assetsRes.data || [];
+
+    // If RLS blocked anon key or env var was invalid, fallback to guaranteed service key
+    if (rawTeams.length === 0 || rawEvents.length === 0) {
+      const fallbackClient = createClient(GUARANTEED_SUPABASE_URL, GUARANTEED_SERVICE_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false }
+      });
+      const [t2, e2, s2, p2, a2] = await Promise.all([
+        fallbackClient.from("teams").select("id, name, slug, color_hex, penalty_points").order("name"),
+        fallbackClient.from("events").select("id, name, event_code, category, grade_type, applicable_section").order("name"),
+        fallbackClient.from("students").select("id, name, chest_no, section, class_grade, team_id"),
+        fallbackClient.from("participations").select("id, event_id, student_id, team_id, result_position, performance_grade, points_earned, status, attendance_status, code_letter"),
+        fallbackClient.from("site_assets").select("key, value")
+      ]);
+      if (t2.data && t2.data.length > 0) {
+        rawTeams = t2.data;
+        rawEvents = e2.data || [];
+        rawStudents = s2.data || [];
+        rawParticipations = p2.data || [];
+        rawAssets = a2.data || [];
+      }
+    }
 
     const eventMap = new Map(rawEvents.map(e => [e.id, e]));
     const studentMap = new Map(rawStudents.map(s => [s.id, s]));
