@@ -24,7 +24,7 @@ const POINT_SYSTEM = {
   'C': { 1: 20, 2: 15, 3: 10 } 
 };
 
-const GRADE_POINTS = { 'A': 5, 'B': 3, 'C': 1, 'None': 0 };
+const GRADE_POINTS: Record<string, number> = { 'A+': 7, 'A': 5, 'B': 3, 'C': 1, 'None': 0, 'NONE': 0 };
 
 type WinnerEntry = {
   student_id: string | null;
@@ -99,7 +99,7 @@ const StudentAutocomplete = ({
       <div className="relative">
         <input
           type="text"
-          className="w-full p-2 pl-9 border rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+          className="w-full p-2 pl-9 border rounded bg-white focus:ring-2 focus:ring-[#caa02f] outline-none text-sm"
           placeholder={levelLabel ? `Search ${levelLabel} student...` : "Select Level first..."}
           value={query}
           disabled={!levelLabel}
@@ -120,7 +120,7 @@ const StudentAutocomplete = ({
               <button
                 key={s.id}
                 type="button"
-                className="w-full text-left px-4 py-2 hover:bg-blue-50 flex justify-between items-center border-b border-slate-50 last:border-0 group transition-colors"
+                className="w-full text-left px-4 py-2 hover:bg-amber-50 flex justify-between items-center border-b border-slate-50 last:border-0 group transition-colors"
                 onClick={() => {
                   onChange(s.id);
                   setQuery(`${s.name} (${s.chest_no})`);
@@ -131,7 +131,7 @@ const StudentAutocomplete = ({
                   <div className="font-bold text-slate-800 text-sm">{s.name}</div>
                   <div className="text-[10px] text-slate-400 uppercase">{s.section}</div>
                 </div>
-                <span className="text-xs font-mono font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded group-hover:bg-blue-200 group-hover:text-blue-800">
+                <span className="text-xs font-mono font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded group-hover:bg-[#caa02f] group-hover:text-[#0b0904]">
                   #{s.chest_no}
                 </span>
               </button>
@@ -318,19 +318,19 @@ export default function AdminResultEntry() {
     }
   };
 
-  if (!isAuthorized) return <div className="flex h-screen w-full items-center justify-center bg-slate-50"><Loader2 className="h-10 w-10 animate-spin text-blue-600" /></div>;
+  if (!isAuthorized) return <div className="flex h-screen w-full items-center justify-center bg-[#0b0904]"><Loader2 className="h-10 w-10 animate-spin text-[#caa02f]" /></div>;
 
   return (
     <div className="max-w-full mx-auto p-6 bg-slate-50 min-h-screen font-sans text-slate-900">
       <header className="mb-8">
-        <h1 className="text-3xl font-black text-[#0033A0] flex items-center gap-3">
-          <Trophy className="w-8 h-8 text-yellow-500" /> Result Manager
+        <h1 className="text-3xl font-black text-[#0b0904] flex items-center gap-3">
+          <Trophy className="w-8 h-8 text-[#caa02f]" /> Result Manager
         </h1>
         <div className="flex items-center gap-2 text-sm text-slate-500 mt-2">
-          <span className={step >= 0 ? "text-blue-600 font-bold" : ""}>1. Level</span> <ChevronRight className="w-4 h-4" />
-          <span className={step >= 1 ? "text-blue-600 font-bold" : ""}>2. Event</span> <ChevronRight className="w-4 h-4" />
-          <span className={step >= 2 ? "text-blue-600 font-bold" : ""}>3. Category</span> <ChevronRight className="w-4 h-4" />
-          <span className={step >= 3 ? "text-blue-600 font-bold" : ""}>4. Winners</span>
+          <span className={step >= 0 ? "text-[#caa02f] font-bold" : ""}>1. Level</span> <ChevronRight className="w-4 h-4" />
+          <span className={step >= 1 ? "text-[#caa02f] font-bold" : ""}>2. Event</span> <ChevronRight className="w-4 h-4" />
+          <span className={step >= 2 ? "text-[#caa02f] font-bold" : ""}>3. Category</span> <ChevronRight className="w-4 h-4" />
+          <span className={step >= 3 ? "text-[#caa02f] font-bold" : ""}>4. Winners</span>
         </div>
       </header>
 
@@ -344,9 +344,9 @@ export default function AdminResultEntry() {
       {step === 0 && (
         <div className="grid grid-cols-2 gap-4">
           {LEVELS.map((level) => (
-            <button key={level.id} onClick={() => { setSelectedLevel(level.id); setStep(1); }} className="p-8 bg-white border-2 border-slate-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-left group">
+            <button key={level.id} onClick={() => { setSelectedLevel(level.id); setStep(1); }} className="p-8 bg-white border-2 border-slate-200 rounded-xl hover:border-[#caa02f] hover:bg-amber-50/50 transition-all text-left group">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Select Level</span>
-              <span className="text-xl font-bold text-slate-800 group-hover:text-blue-700">{level.label}</span>
+              <span className="text-xl font-bold text-slate-800 group-hover:text-[#caa02f]">{level.label}</span>
             </button>
           ))}
         </div>
@@ -355,7 +355,7 @@ export default function AdminResultEntry() {
       {/* STEP 2: EVENT */}
       {step === 1 && (
         <div className="space-y-4">
-           <button onClick={() => setStep(0)} className="text-sm text-slate-500 hover:text-blue-600 mb-2">← Back to Levels</button>
+           <button onClick={() => setStep(0)} className="text-sm text-slate-500 hover:text-[#caa02f] mb-2">← Back to Levels</button>
            <h2 className="text-xl font-bold mb-4">Select {LEVELS.find(l=>l.id===selectedLevel)?.label} Event</h2>
            {loading ? <div className="text-center py-10 text-slate-400">Loading Events...</div> : (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -363,13 +363,13 @@ export default function AdminResultEntry() {
                  const positions = existingResults[event.id];
                  const hasResults = positions && positions.length > 0;
                  return (
-                    <button key={event.id} onClick={() => !hasResults && handleEventSelect(event)} disabled={hasResults} className={`p-4 border rounded-lg text-left flex justify-between items-center transition-all relative overflow-hidden ${hasResults ? 'bg-slate-100 border-slate-200 cursor-not-allowed opacity-80' : 'bg-white border-slate-200 hover:border-blue-500 hover:shadow-md'}`}>
+                    <button key={event.id} onClick={() => !hasResults && handleEventSelect(event)} disabled={hasResults} className={`p-4 border rounded-lg text-left flex justify-between items-center transition-all relative overflow-hidden ${hasResults ? 'bg-slate-100 border-slate-200 cursor-not-allowed opacity-80' : 'bg-white border-slate-200 hover:border-[#caa02f] hover:shadow-md'}`}>
                       <div className="flex flex-col">
                         <span className={`font-semibold ${hasResults ? 'text-slate-500' : 'text-slate-700'}`}>{event.name}</span>
                         {hasResults && (<div className="flex items-center gap-1 mt-1"><span className="text-[10px] text-green-600 font-bold bg-green-50 px-1.5 py-0.5 rounded border border-green-100">Published</span><span className="text-[10px] text-slate-400">(Pos: {positions.join(', ')})</span></div>)}
                       </div>
                       <div className="text-right z-10">
-                         {hasResults ? <Lock className="w-5 h-5 text-slate-400" /> : <><span className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-500 font-mono block mb-1">{event.event_code}</span>{event.grade_type && <span className="text-[10px] bg-yellow-100 text-yellow-800 px-1 rounded">Cat {event.grade_type}</span>}</>}
+                         {hasResults ? <Lock className="w-5 h-5 text-slate-400" /> : <><span className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-500 font-mono block mb-1">{event.event_code}</span>{event.grade_type && <span className="text-[10px] bg-amber-100 text-amber-800 px-1 rounded font-bold">Cat {event.grade_type}</span>}</>}
                       </div>
                     </button>
                  );
@@ -382,11 +382,11 @@ export default function AdminResultEntry() {
       {/* STEP 3: CATEGORY */}
       {step === 2 && (
         <div className="space-y-6">
-           <button onClick={() => setStep(1)} className="text-sm text-slate-500 hover:text-blue-600">← Back to Events</button>
-           <h2 className="text-xl font-bold">Confirm Category for <span className="text-blue-600">{selectedEvent?.name}</span></h2>
+           <button onClick={() => setStep(1)} className="text-sm text-slate-500 hover:text-[#caa02f]">← Back to Events</button>
+           <h2 className="text-xl font-bold">Confirm Category for <span className="text-[#caa02f]">{selectedEvent?.name}</span></h2>
            <div className="grid grid-cols-3 gap-6">
              {['A', 'B', 'C'].map((cat) => (
-               <button key={cat} onClick={() => { setSelectedCategory(cat as any); setStep(3); }} className={`p-6 border-2 rounded-xl transition-all text-center relative overflow-hidden ${selectedCategory === cat ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-200' : 'border-slate-200 bg-white hover:border-blue-300'}`}>
+               <button key={cat} onClick={() => { setSelectedCategory(cat as any); setStep(3); }} className={`p-6 border-2 rounded-xl transition-all text-center relative overflow-hidden ${selectedCategory === cat ? 'border-[#caa02f] bg-amber-50 ring-2 ring-amber-200' : 'border-slate-200 bg-white hover:border-amber-300'}`}>
                  <div className="text-4xl font-black text-slate-200 absolute -top-2 -right-2 opacity-50">{cat}</div>
                  <div className="text-2xl font-bold text-slate-800 mb-2">Category {cat}</div>
                </button>
@@ -399,10 +399,10 @@ export default function AdminResultEntry() {
       {step === 3 && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-             <button onClick={() => setStep(2)} className="text-sm text-slate-500 hover:text-blue-600">← Change Category</button>
+             <button onClick={() => setStep(2)} className="text-sm text-slate-500 hover:text-[#caa02f]">← Change Category</button>
              <div className="text-right">
                 <div className="text-sm text-slate-500">Event: <b>{selectedEvent?.name}</b></div>
-                <div className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded inline-block font-bold">Category {selectedCategory}</div>
+                <div className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded inline-block font-bold">Category {selectedCategory}</div>
              </div>
           </div>
 
@@ -446,7 +446,7 @@ export default function AdminResultEntry() {
                         ) : (
                            <div className="relative">
                              <select
-                               className="w-full p-2 pl-9 border rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
+                               className="w-full p-2 pl-9 border rounded bg-white focus:ring-2 focus:ring-[#caa02f] outline-none appearance-none"
                                value={entry.team_id || ''}
                                onChange={(e) => handleEntryChange(index, 'team_id', e.target.value)}
                              >
@@ -462,7 +462,7 @@ export default function AdminResultEntry() {
 
                     <td className="p-4">
                       <div className="flex gap-1 justify-center">
-                        {['A', 'B', 'C', 'None'].map(g => (
+                        {['A+', 'A', 'B', 'C', 'None'].map(g => (
                           <button
                             key={g}
                             onClick={() => handleEntryChange(index, 'grade', g)}
@@ -475,7 +475,7 @@ export default function AdminResultEntry() {
                     </td>
 
                     <td className="p-4">
-                      <div className="font-mono font-black text-blue-600 text-xl text-center">
+                      <div className="font-mono font-black text-[#caa02f] text-xl text-center">
                         {entry.points}
                       </div>
                     </td>
@@ -491,7 +491,7 @@ export default function AdminResultEntry() {
             </table>
             
             <div className="p-4 bg-slate-50 border-t flex justify-between items-center">
-               <button onClick={addEntry} className="flex items-center gap-2 text-sm font-bold text-blue-600 hover:bg-blue-100 px-4 py-2 rounded transition-colors">
+               <button onClick={addEntry} className="flex items-center gap-2 text-sm font-bold text-[#caa02f] hover:bg-amber-50 px-4 py-2 rounded transition-colors">
                  <Plus className="w-4 h-4" /> Add Participant
                </button>
                <div className="text-xs text-slate-400 italic">Points = Position ({selectedCategory}) + Grade Bonus</div>
@@ -499,7 +499,7 @@ export default function AdminResultEntry() {
           </div>
 
           <div className="flex justify-end pt-4">
-            <button onClick={handleSubmit} disabled={loading || entries.length === 0} className="flex items-center gap-2 bg-[#0033A0] text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-900 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105">
+            <button onClick={handleSubmit} disabled={loading || entries.length === 0} className="flex items-center gap-2 bg-[#caa02f] hover:bg-[#deb33a] text-[#0b0904] px-8 py-3 rounded-xl font-black shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105">
               {loading ? 'Publishing...' : <><Save className="w-5 h-5" /> Publish Results</>}
             </button>
           </div>

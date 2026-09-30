@@ -7,93 +7,143 @@ import {
   useAnimationFrame 
 } from 'framer-motion';
 import { 
-  Trophy, ChevronLeft, Table, Zap, RefreshCw, Loader2, Grid, List, Search, X, Filter
+  Trophy, ChevronLeft, Table, Zap, RefreshCw, Loader2, Grid, List, Search, X, Filter, Medal, Award
 } from 'lucide-react';
-import { createClient } from '@/app/utils/supabase/client'; 
 
-// ==========================================
-// ⚙️ CONFIGURATION
-// ==========================================
+const CATEGORIES = ["All", "Aliya", "Foundation", "General", "On Stage", "Off Stage"];
 
-const TEAM_STYLES: Record<string, { color: string, hex: string }> = {
-  'GR1': { color: "blue", hex: "#3b82f6" },    
-  'GR2': { color: "emerald", hex: "#10b981" },  
-  'GR3': { color: "red", hex: "#ef4444" },      
-  'GR4': { color: "amber", hex: "#f59e0b" }     
+type Winner = {
+  pos: number;
+  posLabel: string;
+  name: string;
+  chest_no?: string | null;
+  teamId: string;
+  teamName: string;
+  teamColor: string;
+  grade: string | null;
+  points: number;
 };
 
-const CATEGORIES = ["Sub-Junior", "Junior", "Senior", "General"];
-
-type Winner = { pos: number; name: string; teamId: string; grade: string; points: number; };
-type EventCard = { id: string; eventName: string; category: string; event_id: string; winners: Winner[]; };
+type EventCard = {
+  id: string;
+  eventName: string;
+  event_code: string;
+  category: string;
+  section: string;
+  grade_type: string;
+  winners: Winner[];
+};
 
 // ==========================================
-// 🃏 REUSABLE CARD COMPONENT
+// RESULT CARD COMPONENT
 // ==========================================
-const ResultCard = ({ event, teams, className = "" }: { event: EventCard, teams: any[], className?: string }) => {
+const ResultCard = ({ event, className = "" }: { event: EventCard, className?: string }) => {
   return (
-    <div className={`bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-full ${className}`}>
-        <div className="bg-[#0033A0] p-4 text-white">
-            <div className="flex justify-between items-start">
-                <div className="text-[10px] font-bold text-blue-200 uppercase tracking-widest mb-1">{event.category}</div>
-                <div className="text-[10px] bg-blue-800/50 px-2 py-0.5 rounded text-blue-100 font-mono">{event.event_id}</div>
+    <div className={`bg-white rounded-2xl border-2 border-amber-100 shadow-md overflow-hidden flex flex-col h-full hover:shadow-xl hover:border-[#caa02f] transition-all duration-300 ${className}`}>
+        <div className="bg-gradient-to-r from-[#b88e22] via-[#caa02f] to-[#dfb73e] p-4 text-white">
+            <div className="flex justify-between items-start gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[10px] font-black bg-black/20 px-2 py-0.5 rounded text-amber-100 uppercase tracking-widest">
+                    {event.section}
+                  </span>
+                  <span className="text-[10px] font-bold bg-white/20 px-2 py-0.5 rounded text-white uppercase">
+                    {event.category}
+                  </span>
+                </div>
+                <div className="text-[10px] bg-white/25 px-2 py-0.5 rounded text-white font-mono font-bold shrink-0">
+                  {event.event_code || 'EVENT'}
+                </div>
             </div>
-            <h3 className="font-black text-lg leading-tight mt-1">{event.eventName}</h3>
+            <h3 className="font-black text-lg leading-tight mt-2 text-white drop-shadow-xs">{event.eventName}</h3>
         </div>
-        <div className="p-4 flex-1 space-y-3">
-            {event.winners.map((winner, idx) => {
-                const team = teams.find(t => t.id === winner.teamId);
-                const teamHex = team ? (TEAM_STYLES[team.slug]?.hex || "#9ca3af") : "#9ca3af";
+
+        <div className="p-4 flex-1 space-y-3 bg-white">
+            {event.winners.length === 0 ? (
+              <div className="text-center py-6 text-slate-400 text-xs italic">
+                Awaiting results adjudication...
+              </div>
+            ) : (
+              event.winners.map((winner, idx) => {
+                const teamHex = winner.teamColor || "#caa02f";
+                const isFirst = winner.pos === 1;
+                const isSecond = winner.pos === 2;
+                const isThird = winner.pos === 3;
+
                 return (
-                    <div key={idx} className="flex items-center justify-between border-b last:border-0 border-gray-100 pb-2 last:pb-0">
-                        <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${winner.pos === 1 ? 'bg-yellow-100 text-yellow-700' : winner.pos === 2 ? 'bg-gray-100 text-gray-600' : 'bg-orange-50 text-orange-700'}`}>{winner.pos}</div>
-                            <div>
-                                <div className="text-sm font-bold text-gray-900 line-clamp-1">{winner.name}</div>
-                                <div className="text-xs text-gray-500 font-medium" style={{ color: teamHex }}>{team?.name || 'Individual'}</div>
+                    <div key={idx} className="flex items-center justify-between border-b last:border-0 border-slate-100 pb-2.5 last:pb-0">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shrink-0 shadow-xs ${
+                              isFirst ? 'bg-amber-400 text-slate-950 font-black ring-2 ring-amber-300' :
+                              isSecond ? 'bg-slate-200 text-slate-800 ring-2 ring-slate-300' :
+                              isThird ? 'bg-orange-100 text-orange-800 ring-2 ring-orange-200' :
+                              'bg-slate-100 text-slate-600'
+                            }`}>
+                              {winner.pos}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <div className="text-sm font-bold text-slate-900 truncate">
+                                  {winner.name}
+                                </div>
+                                <div className="text-xs font-semibold flex items-center gap-1.5 mt-0.5">
+                                  {winner.chest_no && (
+                                    <span className="font-mono text-[10px] bg-slate-100 px-1 rounded text-slate-600">
+                                      #{winner.chest_no}
+                                    </span>
+                                  )}
+                                  <span className="truncate" style={{ color: teamHex }}>
+                                    {winner.teamName}
+                                  </span>
+                                </div>
                             </div>
                         </div>
-                        <div className="text-right flex-shrink-0">
-                            <div className="text-lg font-black text-slate-800">+{winner.points}</div>
-                            <div className="text-[10px] font-bold text-gray-400 bg-gray-50 px-1.5 rounded inline-block">{winner.grade} Grade</div>
+
+                        <div className="text-right shrink-0 pl-2">
+                            <div className="text-base font-black text-slate-900">
+                              +{winner.points} <span className="text-[10px] font-normal text-slate-400">pts</span>
+                            </div>
+                            {winner.grade ? (
+                              <div className={`text-[10px] font-black px-1.5 py-0.5 rounded inline-block uppercase ${
+                                winner.grade === 'A+' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
+                                winner.grade === 'A' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                                winner.grade === 'B' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                                'bg-slate-100 text-slate-700 border border-slate-200'
+                              }`}>
+                                Grade {winner.grade}
+                              </div>
+                            ) : (
+                              <div className="text-[10px] text-slate-400">Rank Only</div>
+                            )}
                         </div>
                     </div>
                 );
-            })}
+              })
+            )}
         </div>
     </div>
   );
 };
 
 // ==========================================
-// 🌊 NEW: DRAGGABLE MARQUEE COMPONENT
+// DRAGGABLE MARQUEE COMPONENT
 // ==========================================
-const DraggableMarquee = ({ events, teams }: { events: EventCard[], teams: any[] }) => {
+const DraggableMarquee = ({ events }: { events: EventCard[] }) => {
   const x = useMotionValue(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const [contentWidth, setContentWidth] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
-  // 1. Calculate the width of the content to know when to loop
   useEffect(() => {
     if (containerRef.current) {
-      // We divide by 2 because we are rendering the list TWICE for the loop
       setContentWidth(containerRef.current.scrollWidth / 2);
     }
   }, [events]);
 
-  // 2. The Animation Loop (Runs every frame)
   useAnimationFrame((t, delta) => {
     if (isDragging || contentWidth === 0) return;
-
-    // --- SPEED CONTROL ---
-    // Increase this number to make it faster (e.g., -0.2 is faster than -0.05)
     const speed = -0.07; 
-    
     const moveBy = speed * delta; 
     let newX = x.get() + moveBy;
 
-    // 3. The Infinite Loop Logic (Teleport back to 0)
     if (newX <= -contentWidth) {
       newX = 0;
     }
@@ -102,22 +152,20 @@ const DraggableMarquee = ({ events, teams }: { events: EventCard[], teams: any[]
   });
 
   return (
-    <div className="overflow-hidden w-full cursor-grab active:cursor-grabbing">
-      <motion.div 
+    <div className="overflow-hidden w-full py-4 cursor-grab active:cursor-grabbing select-none relative">
+      <motion.div
         ref={containerRef}
-        className="flex gap-6 py-4 w-max"
+        className="flex gap-6 w-max"
         style={{ x }}
         drag="x"
-        dragConstraints={{ right: 0, left: -contentWidth }} // Limits dragging
+        dragConstraints={{ right: 0, left: -contentWidth }}
         onDragStart={() => setIsDragging(true)}
         onDragEnd={() => setIsDragging(false)}
       >
-        {/* Render List TWICE for infinite illusion */}
-        {[...events, ...events].map((event, i) => (
-           <div key={`${event.id}-${i}`} className="w-96 shrink-0 pointer-events-none"> 
-              {/* pointer-events-none prevents text selection while dragging */}
-              <ResultCard event={event} teams={teams} className="h-full" />
-           </div>
+        {[...events, ...events].map((event, index) => (
+          <div key={`${event.id}-${index}`} className="w-[320px] md:w-[360px] shrink-0">
+            <ResultCard event={event} />
+          </div>
         ))}
       </motion.div>
     </div>
@@ -125,189 +173,205 @@ const DraggableMarquee = ({ events, teams }: { events: EventCard[], teams: any[]
 };
 
 // ==========================================
-// 🚀 MAIN PAGE COMPONENT
+// MAIN RESULTS PAGE
 // ==========================================
 export default function ResultsPage() {
-  const supabase = createClient();
-  const [teams, setTeams] = useState<any[]>([]);
   const [eventResults, setEventResults] = useState<EventCard[]>([]);
+  const [teams, setTeams] = useState<any[]>([]);
   const [breakdown, setBreakdown] = useState<any[]>([]);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [loading, setLoading] = useState(true);
-  const [showAll, setShowAll] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-
-  function setColourCode(teamName: string) {
-    const team = teams.find(t => t.name === teamName);
-    return team ? (TEAM_STYLES[team.slug]?.hex || "#9ca3af") : "#9ca3af";
-  }
-
-  const filteredEvents = useMemo(() => {
-    return eventResults.filter(event => {
-      const categoryMatch = selectedCategory === 'All' || event.category === selectedCategory;
-      const searchLower = searchQuery.toLowerCase();
-      const searchMatch = event.eventName.toLowerCase().includes(searchLower) || 
-                          event.event_id.toLowerCase().includes(searchLower);
-      return categoryMatch && searchMatch;
-    });
-  }, [eventResults, selectedCategory, searchQuery]);
+  const [showAll, setShowAll] = useState(false);
 
   const fetchData = async () => {
-    setLoading(true);
     try {
-      const [teamsRes, eventsRes, studentsRes, resultsRes] = await Promise.all([
-        supabase.from('teams').select('*'),
-        supabase.from('events').select('*'),
-        supabase.from('students').select('id, name'),
-        supabase.from('results').select('*').eq('published', true).order('created_at', { ascending: false })
-      ]);
+      setLoading(true);
+      const res = await fetch('/api/data?t=' + Date.now(), { cache: 'no-store' });
+      const json = await res.json();
 
-      if (teamsRes.error) throw teamsRes.error;
-      
-      // ... (Existing Data Processing Logic) ...
-      const teamMap: Record<string, any> = {};
-      const formattedTeams = teamsRes.data!.map((t: any) => {
-        const style = TEAM_STYLES[t.slug] || { color: "gray", hex: "#9ca3af" };
-        const teamObj = { ...t, ...style };
-        teamMap[t.id] = teamObj; 
-        return teamObj;
-      });
-      setTeams(formattedTeams);
-
-      const eventMap: Record<string, any> = {};
-      eventsRes.data!.forEach((e: any) => { eventMap[e.id] = e; });
-
-      const studentMap: Record<string, string> = {};
-      studentsRes.data!.forEach((s: any) => { studentMap[s.id] = s.name; });
-
-      const groupedMap: Record<string, EventCard> = {};
-      resultsRes.data!.forEach((r: any) => {
-        const event = eventMap[r.event_id];
-        if (!event) return;
-        let finalCategory = event.level || 'General';
-        if (finalCategory.toLowerCase() === 'subjunior') finalCategory = 'Sub-Junior';
-
-        if (!groupedMap[event.id]) {
-          groupedMap[event.id] = {
-            id: event.id, eventName: event.name, category: finalCategory, event_id: event.event_code, winners: []
-          };
-        }
-        let displayName = 'Unknown';
-        if (r.student_id && studentMap[r.student_id]) displayName = studentMap[r.student_id];
-        else if (r.team_id && teamMap[r.team_id]) displayName = teamMap[r.team_id].name;
-
-        groupedMap[event.id].winners.push({
-          pos: r.position, name: displayName, teamId: r.team_id, grade: r.grade, points: r.points
-        });
-      });
-
-      Object.values(groupedMap).forEach(card => card.winners.sort((a, b) => (a.pos || 99) - (b.pos || 99)));
-      const processedEvents = Object.values(groupedMap);
-      setEventResults(processedEvents);
-      calculateStats(formattedTeams, processedEvents);
-      setLastUpdated(new Date());
-
+      if (json.success) {
+        setTeams(json.teams || []);
+        setEventResults(json.events || []);
+        setBreakdown(json.breakdown || []);
+        setLastUpdated(new Date(json.lastUpdated || Date.now()));
+      }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching results:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const calculateStats = (currentTeams: any[], currentEvents: EventCard[]) => {
-    const stats: Record<string, Record<string, number>> = {};
-    currentTeams.forEach(team => {
-      stats[team.id] = { total: 0 };
-      CATEGORIES.forEach(cat => stats[team.id][cat] = 0);
-    });
-    currentEvents.forEach(event => {
-      const cat = event.category || 'General';
-      event.winners.forEach(winner => {
-        const tid = winner.teamId;
-        if (tid && stats[tid]) {
-           if (stats[tid].hasOwnProperty(cat)) stats[tid][cat] = (stats[tid][cat] || 0) + winner.points;
-           stats[tid].total += winner.points;
-        }
-      });
-    });
-    const tableData = currentTeams.map(team => ({
-      ...team, stats: stats[team.id] || { total: 0 }
-    })).sort((a, b) => b.stats.total - a.stats.total);
-    setBreakdown(tableData);
-  };
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 30000); // 30 seconds auto-refresh
+    return () => clearInterval(interval);
+  }, []);
 
-  useEffect(() => { fetchData(); }, []);
+  // Filtered Events
+  const filteredEvents = useMemo(() => {
+    return eventResults.filter(e => {
+      // 1. Category / Section Filter
+      let matchesCategory = true;
+      if (selectedCategory !== 'All') {
+        const secLower = (e.section || '').toLowerCase();
+        const catLower = (e.category || '').toLowerCase();
+        const selLower = selectedCategory.toLowerCase();
 
-  if (loading && eventResults.length === 0) {
-    return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>;
-  }
+        if (selLower === 'on stage') matchesCategory = catLower.includes('on');
+        else if (selLower === 'off stage') matchesCategory = catLower.includes('off');
+        else matchesCategory = secLower.includes(selLower);
+      }
+
+      // 2. Search Query
+      let matchesSearch = true;
+      if (searchQuery.trim() !== '') {
+        const q = searchQuery.toLowerCase();
+        const inEvent = e.eventName.toLowerCase().includes(q) || (e.event_code || '').toLowerCase().includes(q);
+        const inWinners = e.winners.some(w => 
+          w.name.toLowerCase().includes(q) || 
+          (w.chest_no && w.chest_no.toLowerCase().includes(q)) ||
+          w.teamName.toLowerCase().includes(q)
+        );
+        matchesSearch = inEvent || inWinners;
+      }
+
+      return matchesCategory && matchesSearch;
+    });
+  }, [eventResults, selectedCategory, searchQuery]);
 
   return (
-    <main className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      <header className="bg-[#0033A0] text-white pt-8 pb-12 relative overflow-hidden">
-         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
-         <div className="container mx-auto px-6 relative z-10">
-             <a href="/" className="inline-flex items-center gap-2 text-blue-200 hover:text-white mb-6 text-sm font-bold uppercase tracking-widest"><ChevronLeft className="w-4 h-4" /> Back to Home</a>
-             <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-50 via-slate-50 to-white text-slate-800 font-sans selection:bg-[#caa02f] selection:text-white">
+      {/* HEADER */}
+      <header className="relative bg-[#caa02f] text-white py-12 px-6 border-b border-[#b88e22] shadow-lg">
+         <div className="container mx-auto">
+             <div className="flex items-center justify-between gap-4 mb-6">
+                 <a href="/" className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors text-sm font-black uppercase tracking-wider bg-black/10 px-4 py-2 rounded-full border border-white/20">
+                   <ChevronLeft className="w-4 h-4" /> Back to Fest Home
+                 </a>
+                 <div className="flex items-center gap-2 bg-black/15 px-3.5 py-1.5 rounded-full border border-white/20 text-xs font-mono">
+                   <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                   <span>LIVE SYSTEM</span>
+                 </div>
+             </div>
+
+             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl md:text-6xl font-black mb-2 flex items-center gap-3"><Trophy className="w-12 h-12 text-yellow-400" /> Results Center</h1>
-                    <p className="text-blue-200 max-w-lg text-lg">Official Scoreboard & Live Feed</p>
+                    <div className="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-black tracking-widest text-amber-100 uppercase mb-3 border border-white/30">
+                      AAWA 26-27 • 29 Sep, 30 Sep & 01 Oct 2026
+                    </div>
+                    <h1 className="text-4xl md:text-6xl font-black mb-2 flex items-center gap-3 text-white drop-shadow-sm">
+                      <Trophy className="w-10 h-10 md:w-12 md:h-12 text-white" /> AAWA '26 Results
+                    </h1>
+                    <p className="text-white/90 max-w-lg text-lg font-medium">Official Scoreboard & Live Results Feed • When Values Speak</p>
                 </div>
-                <div className="text-right text-xs text-blue-300">
+                <div className="text-right text-xs text-white bg-white/15 px-4 py-2 rounded-xl border border-white/30 shadow-md">
                     Last updated: {lastUpdated.toLocaleTimeString()}
-                    <button onClick={fetchData} className="ml-2 p-1 hover:text-white"><RefreshCw className="w-3 h-3" /></button>
+                    <button onClick={fetchData} title="Refresh" className="ml-2 p-1 hover:text-amber-200 transition-colors">
+                      <RefreshCw className={`w-3.5 h-3.5 inline ${loading ? 'animate-spin' : ''}`} />
+                    </button>
                 </div>
              </div>
          </div>
       </header>
 
-      <div className=" px-6 py-12 space-y-16">
+      {/* BODY */}
+      <div className="container mx-auto px-6 py-12 space-y-16">
+          {/* CATEGORY BREAKDOWN TABLE */}
           <section>
-              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 text-[#0033A0]"><Table className="w-6 h-6" /> Category Breakdown</h2>
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <h2 className="text-2xl font-black mb-6 flex items-center gap-2 text-slate-900">
+                <Table className="w-6 h-6 text-[#caa02f]" /> House Standings & Category Breakdown
+              </h2>
+              <div className="bg-white rounded-2xl shadow-lg border-2 border-white overflow-hidden">
                   <div className="overflow-x-auto">
                       <table className="w-full text-sm text-left">
-                          <thead className="bg-gray-50 text-gray-500 font-bold uppercase tracking-wider border-b border-gray-200">
+                          <thead className="bg-amber-50/70 text-slate-700 font-black uppercase tracking-wider border-b border-amber-200/60">
                               <tr>
-                                  <th className="px-6 py-4">Team</th>
-                                  {CATEGORIES.map(cat => <th key={cat} className="px-6 py-4 text-center">{cat}</th>)}
-                                  <th className="px-6 py-4 text-right text-[#0033A0]">Total</th>
+                                  <th className="px-6 py-4">House / Team</th>
+                                  <th className="px-6 py-4 text-center">Aliya</th>
+                                  <th className="px-6 py-4 text-center">Foundation</th>
+                                  <th className="px-6 py-4 text-center">General</th>
+                                  <th className="px-6 py-4 text-center text-blue-700">On Stage</th>
+                                  <th className="px-6 py-4 text-center text-emerald-700">Off Stage</th>
+                                  <th className="px-6 py-4 text-right text-[#caa02f] font-black">Total Score</th>
                               </tr>
                           </thead>
-                          <tbody className="divide-y divide-gray-100">
-                              {breakdown.map((row) => (
-                                  <tr key={row.id} className="hover:bg-blue-50/30 transition-colors">
-                                      <td className="px-6 py-4 font-bold text-gray-900 flex items-center gap-3"><span className="w-3 h-3 rounded-full" style={{ backgroundColor: setColourCode(row.name) }}></span>{row.name}</td>
-                                      {CATEGORIES.map(cat => <td key={cat} className="px-6 py-4 text-center text-gray-600 font-mono">{row.stats[cat] || 0}</td>)}
-                                      <td className="px-6 py-4 text-right font-black text-lg text-[#0033A0]">{row.stats.total}</td>
+                          <tbody className="divide-y divide-slate-100">
+                              {breakdown.length === 0 ? (
+                                <tr>
+                                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400 italic">
+                                    Loading team breakdown...
+                                  </td>
+                                </tr>
+                              ) : (
+                                breakdown.map((row, idx) => (
+                                  <tr key={row.id} className="hover:bg-amber-50/40 transition-colors">
+                                      <td className="px-6 py-4 font-bold text-slate-900 flex items-center gap-3">
+                                        <span className="w-3.5 h-3.5 rounded-full shadow-sm" style={{ backgroundColor: row.color || "#caa02f" }}></span>
+                                        <div className="flex flex-col">
+                                          <span>{row.name}</span>
+                                          <span className="text-[10px] text-slate-400 font-mono">RANK #{idx+1}</span>
+                                        </div>
+                                      </td>
+                                      <td className="px-6 py-4 text-center text-slate-700 font-mono font-bold">{row.stats.aliya || 0}</td>
+                                      <td className="px-6 py-4 text-center text-slate-700 font-mono font-bold">{row.stats.foundation || 0}</td>
+                                      <td className="px-6 py-4 text-center text-slate-700 font-mono font-bold">{row.stats.general || 0}</td>
+                                      <td className="px-6 py-4 text-center text-blue-700 font-mono font-bold bg-blue-50/30">{row.stats.onStage || 0}</td>
+                                      <td className="px-6 py-4 text-center text-emerald-700 font-mono font-bold bg-emerald-50/30">{row.stats.offStage || 0}</td>
+                                      <td className="px-6 py-4 text-right font-black text-xl text-[#caa02f]">{row.stats.total}</td>
                                   </tr>
-                              ))}
+                                ))
+                              )}
                           </tbody>
                       </table>
                   </div>
               </div>
           </section>
 
+          {/* LIVE RESULTS FEED */}
           <section className="pb-20">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
-                 <h2 className="text-2xl font-bold flex items-center gap-2 text-[#0033A0]"><Zap className="w-6 h-6 text-yellow-500" /> Live Results Feed</h2>
+                 <h2 className="text-2xl font-black flex items-center gap-2 text-slate-900">
+                   <Zap className="w-6 h-6 text-[#caa02f]" /> Published Results Feed ({filteredEvents.length})
+                 </h2>
                  <div className="flex flex-wrap items-center gap-3">
                     <div className="relative group">
-                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-blue-500" />
-                       <input type="text" placeholder="Search events..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-48 md:w-64 transition-all"/>
-                       {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"><X className="w-3 h-3" /></button>}
+                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#caa02f]" />
+                       <input 
+                         type="text" 
+                         placeholder="Search events, chest no, or winners..." 
+                         value={searchQuery} 
+                         onChange={(e) => setSearchQuery(e.target.value)} 
+                         className="pl-10 pr-4 py-2 bg-white border border-amber-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#caa02f] w-64 md:w-80 transition-all shadow-sm"
+                       />
+                       {searchQuery && (
+                         <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500">
+                           <X className="w-3 h-3" />
+                         </button>
+                       )}
                     </div>
-                    <button onClick={() => setShowAll(!showAll)} className="flex items-center gap-2 text-sm font-bold text-slate-600 hover:bg-slate-100 px-4 py-2 rounded-lg transition-colors border border-gray-200 bg-white">
-                      {showAll ? <List className="w-4 h-4" /> : <Grid className="w-4 h-4" />} <span className="hidden sm:inline">{showAll ? "Grid View" : "Scroll View"}</span>
+                    <button 
+                      onClick={() => setShowAll(!showAll)} 
+                      className="flex items-center gap-2 text-sm font-bold text-slate-700 hover:bg-amber-50 px-4 py-2 rounded-xl transition-colors border border-amber-200 bg-white shadow-sm"
+                    >
+                      {showAll ? <List className="w-4 h-4 text-[#caa02f]" /> : <Grid className="w-4 h-4 text-[#caa02f]" />} 
+                      <span className="hidden sm:inline">{showAll ? "Grid View" : "Scroll View"}</span>
                     </button>
                  </div>
               </div>
 
               <div className="flex flex-wrap gap-2 mb-6">
-                  <button onClick={() => setSelectedCategory('All')} className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${selectedCategory === 'All' ? 'bg-[#0033A0] text-white border-[#0033A0]' : 'bg-white text-slate-600 border-gray-200 hover:border-blue-300'}`}>All Categories</button>
                   {CATEGORIES.map(cat => (
-                    <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${selectedCategory === cat ? 'bg-[#0033A0] text-white border-[#0033A0]' : 'bg-white text-slate-600 border-gray-200 hover:border-blue-300'}`}>{cat}</button>
+                    <button 
+                      key={cat} 
+                      onClick={() => setSelectedCategory(cat)} 
+                      className={`px-4 py-2 rounded-full text-xs font-black transition-all border ${selectedCategory === cat ? 'bg-[#caa02f] text-white border-[#caa02f] shadow-md' : 'bg-white text-slate-700 border-amber-200 hover:border-[#caa02f]'}`}
+                    >
+                      {cat}
+                    </button>
                   ))}
               </div>
               
@@ -315,22 +379,20 @@ export default function ResultsPage() {
                    {filteredEvents.length > 0 ? (
                      <>
                        {showAll || searchQuery !== '' || selectedCategory !== 'All' ? (
-                         // MODE A: GRID VIEW
                          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {filteredEvents.map((event, i) => <ResultCard key={`${event.id}-${i}`} event={event} teams={teams} className="w-full" />)}
+                            {filteredEvents.map((event, i) => <ResultCard key={`${event.id}-${i}`} event={event} className="w-full" />)}
                          </motion.div>
                        ) : (
-                         // MODE B: DRAGGABLE MARQUEE VIEW
-                         <DraggableMarquee events={filteredEvents} teams={teams} />
+                         <DraggableMarquee events={filteredEvents} />
                        )}
                      </>
                    ) : (
-                     <div className="flex flex-col items-center justify-center py-20 text-gray-400 border-2 border-dashed border-gray-200 rounded-2xl bg-white">
-                        <Filter className="w-10 h-10 mb-3 opacity-20 text-blue-500" />
-                        <p className="font-medium text-gray-500">No results found.</p>
-                        <p className="text-xs mt-1">Try adjusting your search or filters.</p>
+                     <div className="flex flex-col items-center justify-center py-20 text-slate-400 border-2 border-dashed border-amber-200 rounded-2xl bg-white/80 shadow-sm">
+                        <Filter className="w-10 h-10 mb-3 opacity-30 text-[#caa02f]" />
+                        <p className="font-bold text-slate-700">No results found.</p>
+                        <p className="text-xs mt-1 text-slate-500">Results will appear here as soon as they are published by the jury.</p>
                         {(searchQuery || selectedCategory !== 'All') && (
-                          <button onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }} className="mt-4 text-xs font-bold text-blue-600 hover:underline">Clear Filters</button>
+                          <button onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }} className="mt-4 text-xs font-bold text-[#caa02f] hover:underline">Clear Filters</button>
                         )}
                      </div>
                    )}

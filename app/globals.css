@@ -9,8 +9,11 @@
   --font-stapel: var(--font-bold-font);
   --font-stapell: var(--font-regular-font);
   --font-montserat: var(--font-montserrat-sans);
-  --color-pmsa-blue: #0020b0;
-  --color-pmsa-dark: #00126b;
+  --color-pmsa-gold: #caa02f;
+  --color-pmsa-gold-light: #e6bf47;
+  --color-pmsa-gold-dark: #8f6f19;
+  --color-pmsa-blue: #caa02f;
+  --color-pmsa-dark: #0f0d07;
   --color-pmsa-accent: #ffffff;
 
   --animate-spin-slow: spin 120s linear infinite;
@@ -18,8 +21,9 @@
 }
 
 :root {
-  --background: var(--color-pmsa-blue);
-  --foreground: var(--color-pmsa-accent);
+  --background: #caa02f;
+  --foreground: #1c1504;
+  --theme-gold: #caa02f;
 }
 
 body {

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Amiri, Questrial, Montserrat } from "next/font/google";
+import { Geist, Amiri, Montserrat } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -7,26 +7,20 @@ const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
-const questrialSans = Geist({
-  variable: "--font-questrial-sans",
-  subsets: ["latin"],
-});
-const MontserratSans = Geist({
+
+const MontserratSans = Montserrat({
   variable: "--font-montserrat-sans",
   subsets: ["latin"],
   weight: ["400", "700"],
 });
 
-// Configure the local font with your specific file and variable name
 const stapelBold = localFont({
-  src: "./fonts/stapel-bold.ttf", // Updated filename
+  src: "./fonts/stapel-bold.ttf",
   variable: "--font-bold-font",
-  // weight: "700",
 });
 const stapelRegular = localFont({
-  src: "./fonts/stapel-regular.ttf", 
+  src: "./fonts/stapel-regular.ttf",
   variable: "--font-regular-font",
-  // weight: "400",
 });
 
 const amiri = Amiri({
@@ -36,8 +30,8 @@ const amiri = Amiri({
 });
 
 export const metadata: Metadata = {
-  title: "PMSA Arts Fest 2025-26",
-  description: "Simplicity, Clarity, and Spiritual Growth",
+  title: "AAWA - PMSA Arts Fest 26-27",
+  description: "When Values Speak • AAWA '26 PMSA Arts Fest 26-27",
 };
 
 export default function RootLayout({
@@ -48,7 +42,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${MontserratSans.variable} ${amiri.variable} ${stapelBold.variable} ${stapelRegular.variable} antialiased selection:bg-white selection:text-pmsa-blue`}
+        className={`${geistSans.variable} ${MontserratSans.variable} ${amiri.variable} ${stapelBold.variable} ${stapelRegular.variable} antialiased selection:bg-[#caa02f] selection:text-[#0b0904]`}
       >
         {children}
       </body>

@@ -22,53 +22,39 @@ const SpinningAsterisk = ({ className }: { className: string }) => (
   </motion.div>
 );
 
-// --- MAIN STAGE PAGE ---
+// --- MAIN STAGE SCREEN PAGE ---
 
 export default function StagePage() {
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-[#1c30a9] selection:bg-transparent">
+    <main className="relative w-screen h-screen overflow-hidden bg-[radial-gradient(circle_at_50%_50%,#ffffff_0%,#fcf6e2_35%,#e9c54e_75%,#caa02f_100%)] selection:bg-transparent">
       {/* 1. Background Layers */}
-      {/* <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#1e40af_0%,#0033A0_100%)]"></div> */}
-
-      {/* Noise Overlay */}
-      {/* <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay">
-        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-          <filter id="noiseFilter">
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.6"
-              stitchTiles="stitch"
-            />
-          </filter>
-          <rect width="100%" height="100%" filter="url(#noiseFilter)" />
-        </svg>
-      </div> */}
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-15 pointer-events-none mix-blend-overlay"></div>
 
       {/* 2. Animated Elements (Asterisks) */}
       <div className="absolute inset-0 w-full h-full flex items-center justify-between pointer-events-none z-10">
         <div className="absolute left-[-50vh] top-1/2 -translate-y-1/2">
-          <SpinningAsterisk className="w-[140vh] h-[140vh] text-blue-300/10" />
+          <SpinningAsterisk className="w-[140vh] h-[140vh] text-[#caa02f]/10" />
         </div>
         <div className="absolute right-[5vw] top-[10vh]">
-          <SpinningAsterisk className="w-[30vh] h-[30vh] text-blue-300/10" />
+          <SpinningAsterisk className="w-[30vh] h-[30vh] text-[#caa02f]/10" />
         </div>
       </div>
 
-      {/* 3. Floating Orbs (Slowed down for stage elegance) */}
+      {/* 3. Floating Orbs */}
       <motion.div
         animate={{
           y: [0, -40, 0],
           scale: [1, 1.1, 1],
-          opacity: [0.3, 0.5, 0.3],
+          opacity: [0.25, 0.45, 0.25],
         }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/4 left-1/4 w-[30vw] h-[30vw] bg-[#1c30a9] rounded-full mix-blend-screen filter blur-[150px] opacity-30"
+        className="absolute top-1/4 left-1/4 w-[35vw] h-[35vw] bg-[#caa02f] rounded-full mix-blend-screen filter blur-[160px] opacity-30 pointer-events-none"
       />
       <motion.div
         animate={{
           y: [0, 50, 0],
           scale: [1, 1.2, 1],
-          opacity: [0.2, 0.4, 0.2],
+          opacity: [0.15, 0.35, 0.15],
         }}
         transition={{
           duration: 10,
@@ -76,46 +62,49 @@ export default function StagePage() {
           ease: "easeInOut",
           delay: 1,
         }}
-        className="absolute bottom-1/4 right-1/4 w-[40vw] h-[40vw] bg-indigo-500 rounded-full mix-blend-screen filter blur-[150px] opacity-20"
+        className="absolute bottom-1/4 right-1/4 w-[40vw] h-[40vw] bg-amber-600 rounded-full mix-blend-screen filter blur-[160px] opacity-20 pointer-events-none"
       />
 
       {/* 4. Center Content (Logo & Text) */}
       <div className="relative z-20 w-full h-full flex flex-col items-center justify-center">
         {/* Breathing Logo Effect */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0, scale: 0.85 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
-          className="relative mb-16"
+          className="relative mb-12"
         >
           <motion.div
-            animate={{ scale: [1, 1.05, 1] }}
+            animate={{ scale: [1, 1.04, 1] }}
             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            className="w-[65vw]"
-          // drop-shadow-[0_0_80px_rgba(255,255,255,0.3)]
+            className="w-[50vw] max-w-[700px] drop-shadow-[0_0_80px_rgba(202,160,47,0.4)]"
           >
-            {/* Ensure this image exists in your public folder */}
             <img
-              src="/logo_text.png"
-              alt="QUL Logo"
+              src="/Logo_White.png"
+              alt="AAWA Fest Logo"
               className="w-full h-full object-contain"
             />
           </motion.div>
         </motion.div>
 
-        {/* Text Layer - Bigger for Stage */}
+        {/* Text Layer */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 1 }}
-          className="text-center z-20 fixed bottom-[10dvh] text-white px-4"
+          className="text-center z-20 fixed bottom-[8dvh] px-4"
         >
-          <h1 className="text-7xl font-montserat font-bold uppercase mb-2 text-white">
-              CLOSING CEREMONY
+          <div className="inline-block px-5 py-1.5 rounded-full bg-white/90 border-2 border-[#caa02f] shadow-lg mb-3">
+            <span className="text-sm md:text-base font-black tracking-[0.35em] uppercase text-[#9b781b]">
+              AAWA PMSA ARTS FEST 26-27 • 29 SEP, 30 SEP & 01 OCT 2026
+            </span>
+          </div>
+          <h1 className="text-5xl md:text-7xl font-montserat font-black uppercase text-slate-900 tracking-tight drop-shadow-sm">
+            STAGE ARENA
           </h1>
-          {/* <p className="text-4xl font-montserat uppercase text-white">
-            
-          </p> */}
+          <p className="text-sm md:text-base font-black uppercase tracking-[0.4em] text-[#caa02f] mt-1">
+            "WHEN VALUES SPEAK"
+          </p>
         </motion.div>
       </div>
     </main>
