@@ -18,15 +18,13 @@ import { createClient } from '@/app/utils/supabase/client';
 
 // --- CONFIGURATION ---
 const LIVE_UPDATES = [
-  "🏆 Aden is leading with 292 Points.",
   "📍 Results Updated - Check Leaderboard.",
-  "✨ Grand Finale Highlight Events : Mashup - Skit - Debate (General).",
   "⚡️ 'AAWA '26' Is in full swing — When Values Speak!"
 ];
 
 // Curated High-Performance Default Highlights (Instant 0ms Load)
 const DEFAULT_HIGHLIGHTS = [
-  "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80",
+  "https://kommodo.ai/i/sbchfxN0QC8MMTWRmUV4",
   "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80",
   "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=800&q=80",
   "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80",
