@@ -660,12 +660,13 @@ export default function TvSpecificPage() {
   const [countdownNumber, setCountdownNumber] = useState<number>(3);
   const [durationRemaining, setDurationRemaining] = useState<number>(10);
 
+  const isInitialMountRef = useRef<boolean>(true);
   const lastProcessedTriggerIdRef = useRef<string | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // 1. Fetch live data
-  const fetchData = async () => {
+  const fetchData = async (isInitial = false) => {
     try {
       const res = await fetch('/api/data?t=' + Date.now(), { cache: 'no-store' });
       const json = await res.json();
@@ -683,7 +684,7 @@ export default function TvSpecificPage() {
         }
 
         if (json.broadcast) {
-          handleIncomingBroadcast(json.broadcast, false);
+          handleIncomingBroadcast(json.broadcast, isInitial);
         }
       }
     } catch (error) {
@@ -714,31 +715,25 @@ export default function TvSpecificPage() {
     if (data.status === 'SHOW_STANDINGS') {
       const triggerId = data.trigger_id || String(data.triggered_at || '');
 
+      // On initial page load / reload: NEVER trigger standings. Mark as already processed.
+      if (isInitialLoad || isInitialMountRef.current) {
+        if (triggerId) {
+          lastProcessedTriggerIdRef.current = triggerId;
+        }
+        setBroadcastPhase('IDLE');
+        return;
+      }
+
       // If this trigger was already executed on this client, ignore
       if (triggerId && triggerId === lastProcessedTriggerIdRef.current) {
         return;
       }
 
-      // Check expiration timestamp
       const now = Date.now();
-      const expiresAtMs = data.expires_at ? new Date(data.expires_at).getTime() : 0;
       const triggeredAtMs = data.triggered_at ? new Date(data.triggered_at).getTime() : 0;
-      const countdownSecs = Number(data.countdown_seconds) || 0;
-      const durationSecs = Number(data.duration_seconds) || 10;
-      const totalLifetimeMs = (countdownSecs + durationSecs + 3) * 1000;
-
-      // If expired, or if on initial page load the trigger is older than 5 seconds, ignore
-      const isPastExpiration = expiresAtMs > 0 && expiresAtMs <= now;
-      const isStaleTrigger = triggeredAtMs > 0 && (now - triggeredAtMs > totalLifetimeMs);
-
-      if (isPastExpiration || isStaleTrigger) {
-        lastProcessedTriggerIdRef.current = triggerId;
-        setBroadcastPhase('IDLE');
-        return;
-      }
-
-      // On initial page load, if a broadcast was triggered more than 3 seconds ago, do not replay
-      if (isInitialLoad && triggeredAtMs > 0 && (now - triggeredAtMs > 4000)) {
+      
+      // If trigger is older than 8 seconds, it is not a fresh live action from the dashboard
+      if (triggeredAtMs > 0 && (now - triggeredAtMs > 8000)) {
         lastProcessedTriggerIdRef.current = triggerId;
         setBroadcastPhase('IDLE');
         return;
@@ -747,6 +742,8 @@ export default function TvSpecificPage() {
       lastProcessedTriggerIdRef.current = triggerId;
       clearAllBroadcastTimers();
 
+      const countdownSecs = Number(data.countdown_seconds) ?? 3;
+      const durationSecs = Number(data.duration_seconds) ?? 10;
       const enableCountdownSound = data.countdown_sound !== false;
       const enableRevealSound = data.reveal_sound !== false;
 
@@ -838,7 +835,7 @@ export default function TvSpecificPage() {
             try {
               const rawVal = (payload.new as any).value;
               const val = typeof rawVal === 'string' ? JSON.parse(rawVal) : rawVal;
-              handleIncomingBroadcast(val, true);
+              handleIncomingBroadcast(val, false);
             } catch (e) {
               console.error('Realtime broadcast parse error:', e);
             }
@@ -847,8 +844,13 @@ export default function TvSpecificPage() {
       )
       .subscribe();
 
-    fetchData();
-    const interval = setInterval(fetchData, 12000);
+    fetchData(true).finally(() => {
+      setTimeout(() => {
+        isInitialMountRef.current = false;
+      }, 1200);
+    });
+
+    const interval = setInterval(() => fetchData(false), 12000);
 
     return () => {
       clearAllBroadcastTimers();
@@ -896,12 +898,8 @@ export default function TvSpecificPage() {
           </div>
         </div>
 
-        {/* Top Scores HUD (3 Teams) + Live Clock */}
+        {/* Live Clock */}
         <div className="flex items-center gap-3 md:gap-4">
-          <TopScoresHUD 
-            leaderboard={leaderboard} 
-            isLiveBroadcastActive={broadcastPhase === 'STANDINGS' || broadcastPhase === 'COUNTDOWN'}
-          />
           <LiveClock />
         </div>
       </header>
