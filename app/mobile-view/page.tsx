@@ -442,9 +442,11 @@ export default function MobileViewPage() {
 
         {filteredEvents.length === 0 ? (
           <div className="bg-white/90 backdrop-blur-md rounded-2xl p-8 text-center border border-[#caa02f]/30 shadow-sm mt-4">
-            <Trophy className="w-10 h-10 text-[#caa02f]/60 mx-auto mb-2" />
-            <h3 className="text-sm font-black text-slate-900 uppercase">No Results Found</h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <div className="w-10 h-10 rounded-full bg-[#caa02f]/10 border border-[#caa02f]/30 flex items-center justify-center mx-auto mb-3">
+              <Search className="w-5 h-5 text-[#997314]" />
+            </div>
+            <h3 className="text-xs font-mono font-bold text-slate-800 uppercase tracking-widest">No Results Found</h3>
+            <p className="text-[11px] text-slate-500 mt-1 font-medium">
               Try adjusting your search query or section filter.
             </p>
           </div>
@@ -582,12 +584,12 @@ export default function MobileViewPage() {
 
       {/* 3. BOTTOM TICKER FOOTER */}
       <footer className="fixed bottom-0 left-0 right-0 z-40 bg-black/95 text-[#fce8a6] border-t border-[#caa02f]/50 py-2 px-4 flex items-center justify-between text-[11px] font-mono">
-        <div className="flex items-center gap-1.5 text-[#caa02f] font-bold">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>AAWA '26 • When Values Speak</span>
+        <div className="flex items-center gap-2 text-[#caa02f] font-bold">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block" />
+          <span>AAWA '26 &bull; Official Results Stream</span>
         </div>
         <div className="text-amber-200/70 text-[10px]">
-          Live Stream Mode
+          Tabulation Feed
         </div>
       </footer>
     </div>

@@ -74,10 +74,10 @@ const SAMPLE_EVENTS = [
 ];
 
 const LIVE_UPDATES = [
-  "⚡ AAWA '26 • PMSA ARTS FEST 2026-27 • WHEN VALUES SPEAK",
-  "🏆 Real-Time Official Results Stream • 3 Houses Competing",
-  "📍 Grand Finale Highlights: Mashup, Debate, Skit & Calligraphy",
-  "✨ 29 SEP, 30 SEP & 01 OCT 2026 • PMSA WAFY COLLEGE KATTILANGADI"
+  "AAWA '26 • PMSA ARTS FEST 2026-27 • WHEN VALUES SPEAK",
+  "REAL-TIME OFFICIAL RESULTS STREAM • 3 HOUSES COMPETING",
+  "GRAND FINALE HIGHLIGHTS: MASHUP, DEBATE, SKIT & CALLIGRAPHY",
+  "29 SEP, 30 SEP & 01 OCT 2026 • PMSA WAFY COLLEGE KATTILANGADI"
 ];
 
 // ==========================================
@@ -451,12 +451,11 @@ const BroadcastCountdownOverlay = ({
 };
 
 // ==========================================
-// 📊 BROADCAST HOUSE STANDINGS OVERLAY
-// ==========================================
+// 📊 BROADCAST HOUSE STANDINGS OVERLAY (HIGH CLEAR VISIBILITY)
 const BroadcastStandingsOverlay = ({ 
   isOpen, 
   onClose, 
-  leaderboard,
+  leaderboard, 
   bannerText,
   durationRemaining,
   totalDuration
@@ -480,139 +479,150 @@ const BroadcastStandingsOverlay = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-black/90 backdrop-blur-lg flex items-center justify-center p-4 md:p-8 select-none"
+        className="fixed inset-0 z-50 bg-black/95 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 md:p-10 select-none overflow-hidden"
         onClick={onClose}
       >
         <motion.div
-          initial={{ scale: 0.9, y: 20 }}
-          animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.9, y: 20 }}
-          transition={{ duration: 0.3 }}
+          initial={{ scale: 0.86, y: 30, opacity: 0 }}
+          animate={{ scale: 1, y: 0, opacity: 1 }}
+          exit={{ scale: 0.86, y: 30, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 280, damping: 26 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-5xl bg-gradient-to-br from-[#1c160a] via-[#0d0a04] to-[#181206] border-2 border-[#caa02f] rounded-[2.5rem] p-6 md:p-10 shadow-[0_0_80px_rgba(202,160,47,0.3)] relative overflow-hidden text-white flex flex-col justify-between"
+          className="w-full max-w-6xl bg-gradient-to-br from-[#1c1404] via-[#0a0701] to-[#140e02] border-2 border-[#caa02f] rounded-[2.5rem] p-6 sm:p-8 md:p-12 shadow-[0_0_100px_rgba(202,160,47,0.45)] relative overflow-hidden text-white flex flex-col justify-between"
         >
-          {/* Top Realtime Progress Bar */}
+          {/* Top Live Timer Progress Bar */}
           {progressPercent !== null && (
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-black/60">
+            <div className="absolute top-0 left-0 right-0 h-2 bg-black/80">
               <motion.div 
-                className="h-full bg-gradient-to-r from-amber-500 to-[#caa02f]"
+                className="h-full bg-gradient-to-r from-yellow-400 via-amber-400 to-[#caa02f] shadow-[0_0_15px_#f59e0b]"
                 style={{ width: `${progressPercent}%` }}
                 transition={{ ease: 'linear', duration: 0.2 }}
               />
             </div>
           )}
 
-          {/* Background Grid Pattern */}
-          <div 
-            className="absolute inset-0 pointer-events-none opacity-20"
-            style={{
-              backgroundImage: `radial-gradient(#caa02f 1.5px, transparent 1.5px)`,
-              backgroundSize: '20px 20px'
-            }}
-          />
+          {/* Ambient Gold Glows */}
+          <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#caa02f]/25 rounded-full blur-[100px] pointer-events-none"></div>
+          <div className="absolute -bottom-32 right-1/4 w-[450px] h-[250px] bg-amber-600/20 rounded-full blur-[90px] pointer-events-none"></div>
 
-          {/* Ambient Lighting Spots */}
-          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-48 bg-[#caa02f]/30 rounded-full blur-3xl pointer-events-none"></div>
-
-          {/* Modal Header */}
-          <div className="flex items-center justify-between border-b border-[#caa02f]/30 pb-5 mb-8 relative z-10">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#caa02f] to-amber-500 text-slate-950 flex items-center justify-center shadow-[0_0_25px_rgba(202,160,47,0.5)] font-black text-2xl">
-                <Trophy className="w-8 h-8" />
+          {/* Header */}
+          <div className="flex items-center justify-between border-b-2 border-white/10 pb-6 mb-8 relative z-10">
+            <div className="flex items-center gap-4 sm:gap-6">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-yellow-300 via-[#caa02f] to-amber-600 text-slate-950 flex items-center justify-center shadow-[0_0_35px_rgba(202,160,47,0.6)] font-black text-3xl shrink-0">
+                <Trophy className="w-9 h-9 sm:w-11 sm:h-11 drop-shadow-md" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-md bg-[#caa02f]/20 border border-[#caa02f]/40 text-[#fce8a6]">
-                    OFFICIAL BROADCAST
+                <div className="flex items-center gap-2.5 mb-1">
+                  <span className="text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full bg-amber-400/20 border border-amber-400/50 text-amber-200 shadow-sm flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                    LIVE OFFICIAL STANDINGS
                   </span>
                   {durationRemaining !== undefined && (
-                    <span className="text-[11px] font-mono font-bold text-amber-200/80">
-                      Auto-dismiss in {durationRemaining}s
+                    <span className="text-xs font-mono font-bold text-slate-400 bg-white/5 px-2.5 py-0.5 rounded-full border border-white/10">
+                      Auto-close in {durationRemaining}s
                     </span>
                   )}
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight uppercase mt-1 drop-shadow-sm">
-                  {bannerText || 'House Standings'}
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight uppercase drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                  {bannerText || 'HOUSE STANDINGS'}
                 </h2>
-                <p className="text-xs text-amber-200/80 font-bold">
-                  AAWA '26 PMSA Arts Fest • Live Grand Tabulation
+                <p className="text-xs sm:text-sm text-amber-300 font-bold tracking-wide mt-0.5">
+                  AAWA '26 PMSA ARTS FESTIVAL • WHEN VALUES SPEAK
                 </p>
               </div>
             </div>
 
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-xs font-bold text-white border border-white/20 transition-all active:scale-95"
+              className="px-5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-xs sm:text-sm font-black text-white border border-white/20 transition-all active:scale-95 shadow-md shrink-0"
             >
-              Close
+              ✕ Close
             </button>
           </div>
 
-          {/* 3 Teams Grand Podium Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 mb-6">
+          {/* 3 Teams High-Visibility Podium Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 relative z-10 mb-6">
             {leaderboard.slice(0, 3).map((team, idx) => {
               const isFirst = idx === 0;
               const isSecond = idx === 1;
+              const isThird = idx === 2;
 
               return (
                 <div
                   key={team.id || idx}
-                  className={`rounded-3xl p-6 border flex flex-col justify-between relative overflow-hidden transition-all ${
+                  className={`rounded-3xl p-6 sm:p-8 border-2 flex flex-col justify-between relative overflow-hidden transition-all ${
                     isFirst
-                      ? 'bg-gradient-to-b from-amber-500/25 via-[#caa02f]/15 to-black/80 border-amber-400 shadow-[0_0_40px_rgba(202,160,47,0.3)] md:-translate-y-2'
+                      ? 'bg-gradient-to-b from-[#2a1e05] via-[#150f02] to-black border-amber-400 shadow-[0_0_50px_rgba(202,160,47,0.4)] md:-translate-y-3'
                       : isSecond
-                      ? 'bg-slate-900/60 border-slate-400/40 shadow-lg'
-                      : 'bg-amber-950/40 border-amber-800/40 shadow-lg'
+                      ? 'bg-gradient-to-b from-[#141820] via-[#0c0e14] to-black border-slate-300 shadow-[0_0_30px_rgba(203,213,225,0.25)]'
+                      : 'bg-gradient-to-b from-[#1f1007] via-[#100703] to-black border-amber-700/80 shadow-[0_0_30px_rgba(180,83,9,0.25)]'
                   }`}
                 >
                   {isFirst && (
-                    <div className="absolute -top-6 right-6 px-3 py-1 bg-[#caa02f] text-black font-black text-[10px] uppercase tracking-widest rounded-b-lg shadow-md flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" /> Leading
+                    <div className="absolute top-0 right-8 px-4 py-1 bg-gradient-to-r from-yellow-400 to-[#caa02f] text-slate-950 font-black text-xs uppercase tracking-widest rounded-b-xl shadow-lg flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 fill-current" /> CHAMPION
                     </div>
                   )}
 
                   <div>
-                    <div className="flex items-center justify-between mb-4">
+                    {/* Rank Badge & Team Dot */}
+                    <div className="flex items-center justify-between mb-5">
                       <span 
-                        className={`w-11 h-11 rounded-2xl flex items-center justify-center font-mono font-black text-xl ${
+                        className={`w-14 h-14 rounded-2xl flex items-center justify-center font-mono font-black text-2xl shadow-xl ${
                           isFirst 
-                            ? 'bg-[#caa02f] text-black shadow-lg ring-2 ring-amber-300' 
+                            ? 'bg-gradient-to-br from-yellow-300 via-amber-400 to-[#caa02f] text-slate-950 ring-4 ring-amber-300/40' 
                             : isSecond 
-                            ? 'bg-slate-300 text-black shadow-md' 
-                            : 'bg-amber-800 text-white shadow-md'
+                            ? 'bg-gradient-to-br from-white via-slate-200 to-slate-400 text-slate-950 ring-2 ring-white/40' 
+                            : 'bg-gradient-to-br from-amber-600 to-amber-900 text-amber-100 ring-2 ring-amber-500/30'
                         }`}
                       >
                         #{idx + 1}
                       </span>
-                      <span 
-                        className="w-4 h-4 rounded-full inline-block shadow-md ring-2 ring-white/30"
-                        style={{ backgroundColor: team.color_hex || team.color || '#caa02f' }}
-                      />
+                      <div className="flex items-center gap-2 bg-black/60 px-3 py-1 rounded-full border border-white/10">
+                        <span 
+                          className="w-3.5 h-3.5 rounded-full inline-block shadow-md ring-2 ring-white/40"
+                          style={{ backgroundColor: team.color_hex || team.color || '#caa02f' }}
+                        />
+                        <span className="text-[11px] font-mono font-bold text-slate-300 uppercase">
+                          {team.slug || team.name}
+                        </span>
+                      </div>
                     </div>
 
-                    <h3 className="text-2xl md:text-3xl font-black text-white mb-1 tracking-tight drop-shadow-sm">
+                    {/* Team Name */}
+                    <h3 className="text-2xl sm:text-3xl font-black text-white mb-2 tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
                       {team.name}
                     </h3>
                     
-                    <div className="font-mono font-black text-4xl md:text-5xl text-amber-300 mb-6 drop-shadow-sm">
-                      {team.points || team.stats?.total || 0}
-                      <span className="text-xs font-bold text-amber-200/70 uppercase ml-2 tracking-widest">PTS</span>
+                    {/* Grand Total Score (Massive & Ultra Clear) */}
+                    <div className="bg-black/60 rounded-2xl p-4 border border-white/10 mb-6 flex items-baseline justify-between shadow-inner">
+                      <span className="text-xs font-black text-slate-400 uppercase tracking-wider">TOTAL POINTS</span>
+                      <div className="font-mono font-black text-5xl sm:text-6xl text-yellow-300 drop-shadow-[0_0_20px_rgba(253,224,71,0.5)]">
+                        {team.points || team.stats?.total || 0}
+                        <span className="text-xs font-extrabold text-amber-200/80 ml-1.5 uppercase font-sans">PTS</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Section Breakdown Mini Bars */}
-                  <div className="space-y-2 bg-black/50 p-4 rounded-2xl border border-white/10 text-xs font-mono">
-                    <div className="flex justify-between items-center text-amber-100/80">
-                      <span>Aliya Section</span>
-                      <span className="font-extrabold text-white text-sm">{team.sections?.aliya || team.stats?.aliya || 0}</span>
+                  {/* Section Breakdown Mini Table */}
+                  <div className="space-y-2 bg-black/80 p-4 rounded-2xl border border-white/10 text-xs font-mono">
+                    <div className="flex justify-between items-center text-slate-300 pb-1.5 border-b border-white/5">
+                      <span className="font-semibold text-amber-200">Aliya Section</span>
+                      <span className="font-black text-white text-base bg-white/10 px-2.5 py-0.5 rounded-lg">
+                        {team.sections?.aliya || team.stats?.aliya || 0}
+                      </span>
                     </div>
-                    <div className="flex justify-between items-center text-amber-100/80">
-                      <span>Foundation Section</span>
-                      <span className="font-extrabold text-white text-sm">{team.sections?.foundation || team.stats?.foundation || 0}</span>
+                    <div className="flex justify-between items-center text-slate-300 pb-1.5 border-b border-white/5">
+                      <span className="font-semibold text-amber-200">Foundation Section</span>
+                      <span className="font-black text-white text-base bg-white/10 px-2.5 py-0.5 rounded-lg">
+                        {team.sections?.foundation || team.stats?.foundation || 0}
+                      </span>
                     </div>
-                    <div className="flex justify-between items-center text-amber-100/80">
-                      <span>General Events</span>
-                      <span className="font-extrabold text-white text-sm">{team.sections?.general || team.stats?.general || 0}</span>
+                    <div className="flex justify-between items-center text-slate-300">
+                      <span className="font-semibold text-amber-200">General Events</span>
+                      <span className="font-black text-white text-base bg-white/10 px-2.5 py-0.5 rounded-lg">
+                        {team.sections?.general || team.stats?.general || 0}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -621,10 +631,10 @@ const BroadcastStandingsOverlay = ({
           </div>
 
           {/* Footer Info */}
-          <div className="relative z-10 flex items-center justify-between border-t border-white/10 pt-4 text-xs text-amber-200/80 font-mono">
-            <span className="font-bold">AAWA CENTRAL JURY TABULATION</span>
-            <span className="text-[#caa02f] font-black tracking-wider">
-              UPDATED IN REAL-TIME
+          <div className="relative z-10 flex items-center justify-between border-t-2 border-white/10 pt-5 text-xs text-slate-400 font-mono">
+            <span className="font-black text-amber-300 tracking-wider">AAWA CENTRAL JURY TABULATION</span>
+            <span className="text-slate-300 font-bold">
+              REAL-TIME BROADCAST SYNC
             </span>
           </div>
         </motion.div>
@@ -673,7 +683,7 @@ export default function TvSpecificPage() {
         }
 
         if (json.broadcast) {
-          handleIncomingBroadcast(json.broadcast);
+          handleIncomingBroadcast(json.broadcast, false);
         }
       }
     } catch (error) {
@@ -692,10 +702,10 @@ export default function TvSpecificPage() {
     }
   };
 
-  const handleIncomingBroadcast = (data: BroadcastPayload) => {
+  const handleIncomingBroadcast = (data: BroadcastPayload, isInitialLoad = false) => {
     setBroadcastState(data);
 
-    if (data.status === 'HIDE' || data.status === 'IDLE') {
+    if (!data || data.status === 'HIDE' || data.status === 'IDLE') {
       clearAllBroadcastTimers();
       setBroadcastPhase('IDLE');
       return;
@@ -704,15 +714,39 @@ export default function TvSpecificPage() {
     if (data.status === 'SHOW_STANDINGS') {
       const triggerId = data.trigger_id || String(data.triggered_at || '');
 
+      // If this trigger was already executed on this client, ignore
       if (triggerId && triggerId === lastProcessedTriggerIdRef.current) {
         return;
       }
-      lastProcessedTriggerIdRef.current = triggerId;
 
+      // Check expiration timestamp
+      const now = Date.now();
+      const expiresAtMs = data.expires_at ? new Date(data.expires_at).getTime() : 0;
+      const triggeredAtMs = data.triggered_at ? new Date(data.triggered_at).getTime() : 0;
+      const countdownSecs = Number(data.countdown_seconds) || 0;
+      const durationSecs = Number(data.duration_seconds) || 10;
+      const totalLifetimeMs = (countdownSecs + durationSecs + 3) * 1000;
+
+      // If expired, or if on initial page load the trigger is older than 5 seconds, ignore
+      const isPastExpiration = expiresAtMs > 0 && expiresAtMs <= now;
+      const isStaleTrigger = triggeredAtMs > 0 && (now - triggeredAtMs > totalLifetimeMs);
+
+      if (isPastExpiration || isStaleTrigger) {
+        lastProcessedTriggerIdRef.current = triggerId;
+        setBroadcastPhase('IDLE');
+        return;
+      }
+
+      // On initial page load, if a broadcast was triggered more than 3 seconds ago, do not replay
+      if (isInitialLoad && triggeredAtMs > 0 && (now - triggeredAtMs > 4000)) {
+        lastProcessedTriggerIdRef.current = triggerId;
+        setBroadcastPhase('IDLE');
+        return;
+      }
+
+      lastProcessedTriggerIdRef.current = triggerId;
       clearAllBroadcastTimers();
 
-      const countdownSecs = data.countdown_seconds ?? 3;
-      const durationSecs = data.duration_seconds ?? 10;
       const enableCountdownSound = data.countdown_sound !== false;
       const enableRevealSound = data.reveal_sound !== false;
 
@@ -784,7 +818,7 @@ export default function TvSpecificPage() {
         if (data?.value) {
           try {
             const val = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
-            handleIncomingBroadcast(val);
+            handleIncomingBroadcast(val, true);
           } catch (e) {}
         }
       });
@@ -804,7 +838,7 @@ export default function TvSpecificPage() {
             try {
               const rawVal = (payload.new as any).value;
               const val = typeof rawVal === 'string' ? JSON.parse(rawVal) : rawVal;
-              handleIncomingBroadcast(val);
+              handleIncomingBroadcast(val, true);
             } catch (e) {
               console.error('Realtime broadcast parse error:', e);
             }

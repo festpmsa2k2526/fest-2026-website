@@ -18,8 +18,8 @@ import { createClient } from '@/app/utils/supabase/client';
 
 // --- CONFIGURATION ---
 const LIVE_UPDATES = [
-  "📍 Results Updated - Check Leaderboard.",
-  "⚡️ 'AAWA '26' Is in full swing — When Values Speak!"
+  "OFFICIAL RESULTS UPDATED — CHECK LEADERBOARD",
+  "AAWA '26 — WHEN VALUES SPEAK — ARTS FESTIVAL 2026-27"
 ];
 
 // Curated High-Performance Default Highlights (Instant 0ms Load)

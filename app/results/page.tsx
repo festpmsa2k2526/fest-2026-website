@@ -263,8 +263,8 @@ export default function ResultsPage() {
                     <div className="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-black tracking-widest text-amber-100 uppercase mb-3 border border-white/30">
                       AAWA 26-27 • 29 Sep, 30 Sep & 01 Oct 2026
                     </div>
-                    <h1 className="text-4xl md:text-6xl font-black mb-2 flex items-center gap-3 text-white drop-shadow-sm">
-                      <Trophy className="w-10 h-10 md:w-12 md:h-12 text-white" /> AAWA '26 Results
+                    <h1 className="text-4xl md:text-6xl font-black mb-2 text-white drop-shadow-sm tracking-tight">
+                      AAWA '26 Results
                     </h1>
                     <p className="text-white/90 max-w-lg text-lg font-medium">Official Scoreboard & Live Results Feed • When Values Speak</p>
                 </div>
