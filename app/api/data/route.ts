@@ -17,8 +17,19 @@ function isGroupEvent(name: string, grade: string): boolean {
   const n = (name || '').toUpperCase();
   const g = (grade || '').toUpperCase();
   if (g === 'C') return true;
-  if (n.includes('BROCHURE MAKING') || n.includes('STORY WAVING') || n.includes('STORY WEAVING')) return true;
-  if (n.includes('CONVERSATION ENG') || n.includes('CONVERSATION MAL')) return true;
+  if (
+    n.includes('PHOTO FEATURE') ||
+    n.includes('PHOTOFEATURE') ||
+    n.includes('BROCHURE MAKING') ||
+    n.includes('STORY WAVING') ||
+    n.includes('STORY WEAVING') ||
+    n.includes('ARABIC COMMENTARY') ||
+    n.includes('COMMENTARY ARABIC') ||
+    n.includes('CONVERSATION ENG') ||
+    n.includes('CONVERSATION MAL')
+  ) {
+    return true;
+  }
   return false;
 }
 
@@ -51,7 +62,7 @@ export async function GET() {
       penalty_points: number;
       points: number;
       net_points: number;
-      sections: { aliya: number; foundation: number; general: number };
+      sections: { aliya: number; foundation: number; general: number; fdnGen: number };
       categories: { onStage: number; offStage: number };
     }> = {};
 
@@ -64,7 +75,7 @@ export async function GET() {
         penalty_points: Number(t.penalty_points) || 0,
         points: 0,
         net_points: 0,
-        sections: { aliya: 0, foundation: 0, general: 0 },
+        sections: { aliya: 0, foundation: 0, general: 0, fdnGen: 0 },
         categories: { onStage: 0, offStage: 0 }
       };
     });
@@ -83,7 +94,9 @@ export async function GET() {
         const sections = Array.isArray(ev.applicable_section) ? ev.applicable_section : [ev.applicable_section];
         const secStr = sections.join(" ").toLowerCase();
 
-        if (secStr.includes("general")) {
+        if (secStr.includes("foundation general") || (secStr.includes("foundation") && secStr.includes("general"))) {
+          teamStats[teamId].sections.fdnGen += pts;
+        } else if (secStr.includes("general")) {
           teamStats[teamId].sections.general += pts;
         } else if (secStr.includes("foundation")) {
           teamStats[teamId].sections.foundation += pts;
@@ -107,10 +120,9 @@ export async function GET() {
       t.net_points = Math.max(0, t.points - t.penalty_points);
     });
 
-    const teamsLeaderboard = Object.values(teamStats).sort((a, b) => b.points - a.points);
+    const teamsLeaderboard = Object.values(teamStats).sort((a, b) => b.net_points - a.net_points || b.points - a.points);
 
     // 2. Format Event Results & Winners (Group Aware)
-    // Group participations by event
     const eventPartsMap: Record<string, typeof rawParticipations> = {};
     rawParticipations.forEach(p => {
       if (!p.result_position && (!p.performance_grade || p.performance_grade === 'NONE')) return;
@@ -137,6 +149,7 @@ export async function GET() {
         grade: string | null;
         points: number;
         codeLetter?: string | null;
+        members?: Array<{ name: string; chest_no?: string | null }>;
       }>;
     }> = [];
 
@@ -164,7 +177,7 @@ export async function GET() {
       };
 
       if (isGrp) {
-        // Group by group key: team_id + '_' + (code_letter || 'grp')
+        // Group by group key: team_id + '_' + (code_letter || result_position || 'part')
         const groupsMap: Record<string, typeof parts> = {};
         parts.forEach(p => {
           const code = p.code_letter ? p.code_letter.trim().toUpperCase() : '';
@@ -185,13 +198,13 @@ export async function GET() {
           else if (posStr === "THIRD") posNum = 3;
 
           // Group members names & chests
-          const studentMembers = grpParts.map(p => {
-            const st = p.student_id ? studentMap.get(p.student_id) : null;
-            return {
+          const studentMembers = grpParts
+            .map(p => (p.student_id ? studentMap.get(p.student_id) : null))
+            .filter(Boolean)
+            .map(st => ({
               name: st?.name || 'Participant',
               chest_no: st?.chest_no || null
-            };
-          });
+            }));
 
           let displayName = studentMembers.map(s => s.name).join(' & ');
           let displayChest = studentMembers.map(s => s.chest_no).filter(Boolean).join(', ');
@@ -200,7 +213,7 @@ export async function GET() {
             displayName = tm ? tm.name : 'Team Group';
           }
 
-          // Sum points for this group (max of points_earned in group to avoid 0s)
+          // Sum points for this group (max of points_earned in group)
           const totalPts = Math.max(...grpParts.map(p => Number(p.points_earned) || 0));
 
           eventItem.winners.push({
@@ -213,7 +226,8 @@ export async function GET() {
             teamColor: tm?.color_hex || "#caa02f",
             grade: gradeStr,
             points: totalPts,
-            codeLetter: firstP.code_letter || null
+            codeLetter: firstP.code_letter || null,
+            members: studentMembers
           });
         });
       } else {
@@ -271,44 +285,37 @@ export async function GET() {
       name: t.name,
       slug: t.slug,
       color: t.color_hex,
-      stats: {
-        aliya: t.sections.aliya,
-        foundation: t.sections.foundation,
-        general: t.sections.general,
-        onStage: t.categories.onStage,
-        offStage: t.categories.offStage,
-        total: t.points
-      }
+      penalty: t.penalty_points,
+      total: t.net_points,
+      rawTotal: t.points,
+      aliya: t.sections.aliya,
+      foundation: t.sections.foundation,
+      general: t.sections.general,
+      fdnGen: t.sections.fdnGen,
+      onStage: t.categories.onStage,
+      offStage: t.categories.offStage
     }));
 
-    // 4. TV Broadcast Controls from site_assets
-    const broadcastAsset = rawAssets.find(a => a.key === "tv_broadcast_control");
-    let broadcastState = null;
-    if (broadcastAsset?.value) {
-      try {
-        broadcastState = typeof broadcastAsset.value === "string" ? JSON.parse(broadcastAsset.value) : broadcastAsset.value;
-      } catch (e) {
-        broadcastState = null;
-      }
-    }
+    // 4. Site Assets Dictionary
+    const assets: Record<string, string> = {};
+    rawAssets.forEach(a => {
+      if (a.key && a.value) assets[a.key] = a.value;
+    });
 
     return NextResponse.json({
       success: true,
-      teams: teamsLeaderboard,
+      timestamp: new Date().toISOString(),
+      standings: teamsLeaderboard,
       events: eventsWithResults,
-      breakdown: categoryBreakdown,
-      broadcast: broadcastState,
-      totalCount: eventsWithResults.length,
-      lastUpdated: new Date().toISOString()
+      categoryBreakdown,
+      assets
     }, {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
       }
     });
-  } catch (err: any) {
-    console.error("API /api/data error:", err);
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (error: any) {
+    console.error("API Data Fetch Error:", error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
