@@ -460,7 +460,7 @@ const TopScoresHUD = ({
               />
               <span className="font-extrabold text-white text-xs md:text-sm tracking-wide">{team.name}</span>
               <span className="font-mono font-black text-xs md:text-sm text-[#fce8a6] drop-shadow-sm">
-                {team.points || team.stats?.total || 0}
+                {team.net_points !== undefined ? team.net_points : (team.points || 0)}
               </span>
             </div>
           ))}
@@ -683,33 +683,49 @@ const BroadcastStandingsOverlay = ({
                     </h3>
                     
                     {/* Grand Total Score (Massive & Ultra Clear) */}
-                    <div className="bg-black/60 rounded-2xl p-4 border border-white/10 mb-6 flex items-baseline justify-between shadow-inner">
-                      <span className="text-xs font-black text-slate-400 uppercase tracking-wider">TOTAL POINTS</span>
-                      <div className="font-mono font-black text-5xl sm:text-6xl text-yellow-300 drop-shadow-[0_0_20px_rgba(253,224,71,0.5)]">
-                        {team.points || team.stats?.total || 0}
-                        <span className="text-xs font-extrabold text-amber-200/80 ml-1.5 uppercase font-sans">PTS</span>
+                    <div className="bg-black/60 rounded-2xl p-4 border border-white/10 mb-4 shadow-inner flex flex-col justify-between">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-xs font-black text-slate-400 uppercase tracking-wider">NET STANDING SCORE</span>
+                        <div className="font-mono font-black text-5xl sm:text-6xl text-yellow-300 drop-shadow-[0_0_20px_rgba(253,224,71,0.5)]">
+                          {team.net_points !== undefined ? team.net_points : (team.points || 0)}
+                          <span className="text-xs font-extrabold text-amber-200/80 ml-1.5 uppercase font-sans">PTS</span>
+                        </div>
                       </div>
+                      {Number(team.penalty_points || team.penalty || 0) > 0 && (
+                        <div className="flex items-center justify-between text-[11px] font-mono font-bold mt-2 pt-2 border-t border-white/10">
+                          <span className="text-emerald-400">Earned: {team.points || team.rawTotal || 0} pts</span>
+                          <span className="text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-800/60">
+                            Minus: -{team.penalty_points || team.penalty || 0} pts
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Section Breakdown Mini Table */}
-                  <div className="space-y-2 bg-black/80 p-4 rounded-2xl border border-white/10 text-xs font-mono">
-                    <div className="flex justify-between items-center text-slate-300 pb-1.5 border-b border-white/5">
-                      <span className="font-semibold text-amber-200">Aliya Section</span>
-                      <span className="font-black text-white text-base bg-white/10 px-2.5 py-0.5 rounded-lg">
-                        {team.sections?.aliya || team.stats?.aliya || 0}
+                  <div className="space-y-1.5 bg-black/80 p-3.5 rounded-2xl border border-white/10 text-xs font-mono">
+                    <div className="flex justify-between items-center text-slate-300 pb-1 border-b border-white/5">
+                      <span className="font-semibold text-amber-200">Aliya</span>
+                      <span className="font-black text-white text-sm bg-white/10 px-2 py-0.5 rounded-md">
+                        {team.sections?.aliya || team.aliya || 0}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center text-slate-300 pb-1.5 border-b border-white/5">
-                      <span className="font-semibold text-amber-200">Foundation Section</span>
-                      <span className="font-black text-white text-base bg-white/10 px-2.5 py-0.5 rounded-lg">
-                        {team.sections?.foundation || team.stats?.foundation || 0}
+                    <div className="flex justify-between items-center text-slate-300 pb-1 border-b border-white/5">
+                      <span className="font-semibold text-amber-200">Foundation</span>
+                      <span className="font-black text-white text-sm bg-white/10 px-2 py-0.5 rounded-md">
+                        {team.sections?.foundation || team.foundation || 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-slate-300 pb-1 border-b border-white/5">
+                      <span className="font-semibold text-amber-200">General</span>
+                      <span className="font-black text-white text-sm bg-white/10 px-2 py-0.5 rounded-md">
+                        {team.sections?.general || team.general || 0}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-slate-300">
-                      <span className="font-semibold text-amber-200">General Events</span>
-                      <span className="font-black text-white text-base bg-white/10 px-2.5 py-0.5 rounded-lg">
-                        {team.sections?.general || team.stats?.general || 0}
+                      <span className="font-semibold text-amber-200">Fdn General</span>
+                      <span className="font-black text-white text-sm bg-white/10 px-2 py-0.5 rounded-md">
+                        {team.sections?.fdnGen || team.fdnGen || 0}
                       </span>
                     </div>
                   </div>
@@ -764,12 +780,9 @@ export default function TvScreenPage() {
         if (json.events && json.events.length > 0) {
           setEvents(json.events);
         }
-        if (json.teams && json.teams.length > 0) {
-          setLeaderboard(json.teams);
-        } else if (json.leaderboard && json.leaderboard.length > 0) {
-          setLeaderboard(json.leaderboard);
-        } else if (json.breakdown && json.breakdown.length > 0) {
-          setLeaderboard(json.breakdown);
+        const list = json.standings || json.teams || json.leaderboard || json.breakdown || [];
+        if (list.length > 0) {
+          setLeaderboard(list);
         }
 
         if (json.broadcast) {
@@ -942,7 +955,7 @@ export default function TvScreenPage() {
       }, 1200);
     });
 
-    const interval = setInterval(() => fetchData(false), 12000);
+    const interval = setInterval(() => fetchData(false), 4000);
 
     return () => {
       clearAllBroadcastTimers();

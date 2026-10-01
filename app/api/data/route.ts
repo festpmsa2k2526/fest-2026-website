@@ -62,6 +62,9 @@ export async function GET() {
       penalty_points: number;
       points: number;
       net_points: number;
+      first_places: number;
+      second_places: number;
+      third_places: number;
       sections: { aliya: number; foundation: number; general: number; fdnGen: number };
       categories: { onStage: number; offStage: number };
     }> = {};
@@ -75,6 +78,9 @@ export async function GET() {
         penalty_points: Number(t.penalty_points) || 0,
         points: 0,
         net_points: 0,
+        first_places: 0,
+        second_places: 0,
+        third_places: 0,
         sections: { aliya: 0, foundation: 0, general: 0, fdnGen: 0 },
         categories: { onStage: 0, offStage: 0 }
       };
@@ -84,6 +90,11 @@ export async function GET() {
       const teamId = p.team_id;
       if (!teamId || !teamStats[teamId]) return;
       const pts = Number(p.points_earned) || 0;
+
+      if (p.result_position === 'FIRST') teamStats[teamId].first_places++;
+      if (p.result_position === 'SECOND') teamStats[teamId].second_places++;
+      if (p.result_position === 'THIRD') teamStats[teamId].third_places++;
+
       if (pts <= 0) return;
 
       teamStats[teamId].points += pts;
@@ -92,15 +103,18 @@ export async function GET() {
       if (ev) {
         // Section Breakdown
         const sections = Array.isArray(ev.applicable_section) ? ev.applicable_section : [ev.applicable_section];
-        const secStr = sections.join(" ").toLowerCase();
+        const isFdnGen = sections.some(s => String(s).toLowerCase().includes('foundation general'));
+        const isFnd = sections.some(s => String(s).toLowerCase() === 'foundation');
+        const isAliya = sections.some(s => String(s).toLowerCase() === 'aliya');
+        const isGen = sections.some(s => String(s).toLowerCase() === 'general');
 
-        if (secStr.includes("foundation general") || (secStr.includes("foundation") && secStr.includes("general"))) {
+        if (isFdnGen) {
           teamStats[teamId].sections.fdnGen += pts;
-        } else if (secStr.includes("general")) {
+        } else if (isGen) {
           teamStats[teamId].sections.general += pts;
-        } else if (secStr.includes("foundation")) {
+        } else if (isFnd) {
           teamStats[teamId].sections.foundation += pts;
-        } else if (secStr.includes("aliya")) {
+        } else if (isAliya) {
           teamStats[teamId].sections.aliya += pts;
         } else {
           teamStats[teamId].sections.general += pts;
@@ -177,7 +191,6 @@ export async function GET() {
       };
 
       if (isGrp) {
-        // Group by group key: team_id + '_' + (code_letter || result_position || 'part')
         const groupsMap: Record<string, typeof parts> = {};
         parts.forEach(p => {
           const code = p.code_letter ? p.code_letter.trim().toUpperCase() : '';
@@ -197,7 +210,6 @@ export async function GET() {
           else if (posStr === "SECOND") posNum = 2;
           else if (posStr === "THIRD") posNum = 3;
 
-          // Group members names & chests
           const studentMembers = grpParts
             .map(p => (p.student_id ? studentMap.get(p.student_id) : null))
             .filter(Boolean)
@@ -213,7 +225,6 @@ export async function GET() {
             displayName = tm ? tm.name : 'Team Group';
           }
 
-          // Sum points for this group (max of points_earned in group)
           const totalPts = Math.max(...grpParts.map(p => Number(p.points_earned) || 0));
 
           eventItem.winners.push({
@@ -231,7 +242,6 @@ export async function GET() {
           });
         });
       } else {
-        // Individual Event
         parts.forEach(p => {
           let posNum = 0;
           if (p.result_position === "FIRST") posNum = 1;
@@ -276,7 +286,6 @@ export async function GET() {
       eventsWithResults.push(eventItem);
     });
 
-    // Sort events alphabetically
     eventsWithResults.sort((a, b) => a.eventName.localeCompare(b.eventName));
 
     // 3. Category Breakdown Table Data
@@ -296,7 +305,16 @@ export async function GET() {
       offStage: t.categories.offStage
     }));
 
-    // 4. Site Assets Dictionary
+    // 4. TV Broadcast state from site_assets
+    const broadcastAsset = rawAssets.find(a => a.key === 'tv_broadcast_control' || a.key === 'tv_broadcast');
+    let broadcast = null;
+    if (broadcastAsset?.value) {
+      try {
+        broadcast = typeof broadcastAsset.value === 'string' ? JSON.parse(broadcastAsset.value) : broadcastAsset.value;
+      } catch (e) {}
+    }
+
+    // 5. Site Assets Dictionary
     const assets: Record<string, string> = {};
     rawAssets.forEach(a => {
       if (a.key && a.value) assets[a.key] = a.value;
@@ -306,8 +324,12 @@ export async function GET() {
       success: true,
       timestamp: new Date().toISOString(),
       standings: teamsLeaderboard,
+      teams: teamsLeaderboard,
+      leaderboard: teamsLeaderboard,
+      breakdown: teamsLeaderboard,
       events: eventsWithResults,
       categoryBreakdown,
+      broadcast,
       assets
     }, {
       headers: {
